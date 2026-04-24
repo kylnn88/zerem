@@ -371,15 +371,15 @@ table.lg tfoot td.tdc{background:#EBF2FF;}
     <div class="rib" onclick="navReportsRail()" title="Daily Production Report"><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
     <div class="rsep"></div>
     <div class="rib" onclick="openSettings()" title="Settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></div>
-    <div class="rav" onclick="openProfile()" title="My profile — Sarah Chen">SC</div>
+    <div class="rav" onclick="openProfile()" title="My profile" id="user-rav"></div>
   </div>
 
   <!-- SIDEBAR -->
   <div class="sidebar">
     <div class="sb-head">
       <div class="sb-org" onclick="openOrgPage()" style="cursor:pointer;">
-        <div class="org-av">AC</div>
-        <span class="org-name">Acme Corp</span>
+        <div class="org-av" id="org-av-el"></div>
+        <span class="org-name" id="org-name-el"></span>
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
       </div>
       <input class="sb-search" placeholder="🔍  Search..." id="sb-search" oninput="handleSearch(this.value)"/>
@@ -421,7 +421,7 @@ table.lg tfoot td.tdc{background:#EBF2FF;}
         <div class="tb-av hash">#</div>
         <div class="tb-info">
           <div class="tb-title" id="tb-title">Select a conversation</div>
-          <div class="tb-sub" id="tb-sub">Zerem · Acme Corp</div>
+          <div class="tb-sub" id="tb-sub">Zerem</div>
         </div>
       </div>
       <div class="tb-right" id="tb-right"></div>
@@ -443,6 +443,106 @@ table.lg tfoot td.tdc{background:#EBF2FF;}
 </div>
 
 <script>
+
+// ── READ URL PARAMS (passed from Next.js auth) ──
+const URL_PARAMS = new URLSearchParams(window.location.search);
+const CURRENT_USER = {
+  id: URL_PARAMS.get('user_id') || 'demo',
+  org_id: URL_PARAMS.get('org_id') || 'demo',
+  full_name: URL_PARAMS.get('full_name') || 'User',
+  role: URL_PARAMS.get('role') || 'member',
+  org_name: URL_PARAMS.get('org_name') || 'My Organisation',
+  initials: (URL_PARAMS.get('full_name') || 'U').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2),
+};
+
+const SUPA_URL = 'https://fybsgyxegdvvgosfznxq.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ5YnNneXhlZ2R2dmdvc2Z6bnhxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU0ODg2NjMsImV4cCI6MjA2MTA2NDY2M30.l5DCjDN4BImMkBn6gCFe2IHNBByXN95IwEQfgqp-u2E';
+
+async function supaFetch(table, options = {}) {
+  const { select = '*', filters = [], insert = null, update = null } = options;
+  let url = `${SUPA_URL}/rest/v1/${table}?select=${select}`;
+  filters.forEach(f => { url += `&${f.key}=eq.${f.value}`; });
+  const headers = {
+    'apikey': SUPA_KEY,
+    'Authorization': `Bearer ${SUPA_KEY}`,
+    'Content-Type': 'application/json',
+    'Prefer': insert ? 'return=representation' : 'return=minimal',
+  };
+  const method = insert ? 'POST' : update ? 'PATCH' : 'GET';
+  const body = insert ? JSON.stringify(insert) : update ? JSON.stringify(update) : undefined;
+  const res = await fetch(url, { method, headers, body });
+  return res.json();
+}
+
+function updateUserUI() {
+  // Update user initials in rail avatar
+  const rav = document.getElementById('user-rav');
+  if (rav) rav.textContent = CURRENT_USER.initials;
+  // Update org name in sidebar
+  const orgNameEl = document.getElementById('org-name-el');
+  if (orgNameEl) orgNameEl.textContent = CURRENT_USER.org_name;
+  // Update org avatar initials
+  const orgAv = document.getElementById('org-av-el');
+  if (orgAv) orgAv.textContent = CURRENT_USER.org_name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+  // Update org page avatar and name if visible
+  const orgPageAv = document.getElementById('org-page-av');
+  if (orgPageAv) orgPageAv.textContent = CURRENT_USER.org_name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+  const orgPageName = document.getElementById('org-page-name');
+  if (orgPageName) orgPageName.textContent = CURRENT_USER.org_name;
+}
+
+async function loadDepartments() {
+  if (!CURRENT_USER.org_id || CURRENT_USER.org_id === 'demo') return;
+  try {
+    const depts = await supaFetch('departments', {
+      filters: [{ key: 'org_id', value: CURRENT_USER.org_id }]
+    });
+    const subs = await supaFetch('sub_departments', {
+      filters: [{ key: 'org_id', value: CURRENT_USER.org_id }]
+    });
+    if (depts && depts.length > 0) {
+      DEPTS.length = 0;
+      depts.forEach(d => {
+        DEPTS.push({
+          id: d.id,
+          name: d.name,
+          icon: d.icon || d.name.slice(0,3).toUpperCase(),
+          color: d.color || '#1B3A6B',
+          colorBg: (d.color || '#1B3A6B') + '22',
+          desc: d.description || '',
+          head: '',
+          members: [],
+          subDepts: d.type === 'operations',
+        });
+      });
+    }
+    if (subs && subs.length > 0) {
+      SUBS.length = 0;
+      subs.sort((a,b) => (a.position||0) - (b.position||0));
+      subs.forEach((s, i) => {
+        SUBS.push({
+          id: s.id,
+          name: s.name,
+          type: s.type,
+          color: s.color || '#1B3A6B',
+          label: s.label || s.name,
+          recordLabel: s.record_label || 'pcs',
+          locked: s.locked || false,
+          unread: 0,
+          position: s.position || i,
+        });
+      });
+    }
+    
+setTimeout(updateUserUI, 1000);    
+loadDepartments();
+renderSidebar();
+  } catch(e) {
+    console.log('Using demo data', e);
+    
+  }
+}
+
 // ── CONSTANTS ──
 const MONTHS=['July 2025','August 2025','September 2025'];
 const MONTH_META=[{year:2025,month:6,days:31},{year:2025,month:7,days:31},{year:2025,month:8,days:30}];
@@ -671,7 +771,7 @@ let DEPTS=[
 function openOrgPage(){
   currentView={type:'org'};
   const top=document.getElementById('topbar');
-  top.querySelector('.tb-left').innerHTML=`<div class="tb-av" style="width:30px;height:30px;border-radius:7px;background:var(--brand);color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">AC</div><div class="tb-info"><div class="tb-name">Acme Corp</div><div class="tb-sub" id="tb-sub">Organisation overview &middot; ${DEPTS.length} departments</div></div>`;
+  top.querySelector('.tb-left').innerHTML=`<div class="tb-av" style="width:30px;height:30px;border-radius:7px;background:var(--brand);color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;" id="org-page-av"></div><div class="tb-info"><div class="tb-name" id="org-page-name">My Org</div><div class="tb-sub" id="tb-sub">Organisation overview &middot; ${DEPTS.length} departments</div></div>`;
   document.getElementById('tb-right').innerHTML=`<button class="tbb prim" onclick="openAddDeptModal()">+ Add department</button>`;
   document.getElementById('tabbar').classList.add('hidden');
   document.querySelectorAll('.sbi,.subdept-row,.sdr,.ni').forEach(e=>e.classList.remove('active','on'));
@@ -1176,7 +1276,7 @@ function renderProfilePage(mc){
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;box-shadow:var(--shadow);">
       <div style="padding:14px 18px;border-bottom:1px solid var(--border);background:#F8FAFF;">
         <div style="font-size:13px;font-weight:700;color:var(--text);">Profile photo</div>
-        <div style="font-size:11px;color:var(--text-3);margin-top:1px;">Your photo is visible to all members of Acme Corp</div>
+        <div style="font-size:11px;color:var(--text-3);margin-top:1px;">Your photo is visible to all members of your organisation</div>
       </div>
       <div style="padding:20px 18px;display:flex;align-items:center;gap:22px;">
         <div style="position:relative;flex-shrink:0;">

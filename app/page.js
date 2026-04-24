@@ -27,7 +27,7 @@ export default function Home() {
   async function checkProfile(user) {
     const { data } = await supabase
       .from('profiles')
-      .select('*')
+      .select('*, organisations(name)')
       .eq('id', user.id)
       .single();
     setProfile(data);
@@ -56,7 +56,14 @@ export default function Home() {
   );
 
   if (typeof window !== 'undefined') {
-    window.location.replace('/zerem.html');
+    const params = new URLSearchParams({
+      user_id: session.user.id,
+      org_id: profile.org_id,
+      full_name: profile.full_name || '',
+      role: profile.role || 'member',
+      org_name: profile.organisations?.name || '',
+    });
+    window.location.replace('/zerem.html?' + params.toString());
   }
   return null;
 }

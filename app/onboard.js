@@ -37,6 +37,15 @@ export default function Onboard({ user, onComplete }) {
 
       if (profileError) throw profileError;
 
+      // Set up default departments and sub-departments
+      const { error: setupError } = await supabase
+        .rpc('setup_default_departments', {
+          p_org_id: org.id,
+          p_user_id: user.id,
+        });
+
+      if (setupError) throw setupError;
+
       onComplete();
     } catch (err) {
       setError(err.message);
@@ -144,7 +153,8 @@ export default function Onboard({ user, onComplete }) {
                   width: '100%', padding: '11px',
                   background: fullName.trim() ? '#2456A4' : 'rgba(255,255,255,0.1)',
                   color: '#fff', border: 'none', borderRadius: '9px',
-                  fontSize: '14px', fontWeight: '600', cursor: fullName.trim() ? 'pointer' : 'not-allowed',
+                  fontSize: '14px', fontWeight: '600',
+                  cursor: fullName.trim() ? 'pointer' : 'not-allowed',
                   fontFamily: 'inherit',
                 }}
               >
@@ -203,8 +213,10 @@ export default function Onboard({ user, onComplete }) {
                   onClick={() => setStep(1)}
                   style={{
                     padding: '11px 20px', background: 'transparent',
-                    color: 'rgba(255,255,255,0.5)', border: '1px solid rgba(255,255,255,0.1)',
-                    borderRadius: '9px', fontSize: '14px', cursor: 'pointer', fontFamily: 'inherit',
+                    color: 'rgba(255,255,255,0.5)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    borderRadius: '9px', fontSize: '14px',
+                    cursor: 'pointer', fontFamily: 'inherit',
                   }}
                 >
                   Back
@@ -228,7 +240,6 @@ export default function Onboard({ user, onComplete }) {
           )}
         </div>
 
-        {/* Progress text */}
         <div style={{ textAlign: 'center', marginTop: '16px', fontSize: '12px', color: 'rgba(255,255,255,0.25)' }}>
           Step {step} of 2
         </div>
