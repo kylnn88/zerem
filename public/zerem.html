@@ -1,0 +1,2590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Zerem</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --brand:#1B3A6B;--brand2:#2456A4;--bl:#EBF2FF;--bb:#A8C3E8;
+  --text:#0e1c18;--text-2:#4a6058;--text-3:#8fada5;
+  --bg:#F4F7FF;--surface:#ffffff;--border:#dde9e4;
+  --error:#D85A30;--amber:#BA7517;--blue:#185FA5;--blue-light:#EEF6FF;--blue-border:#B8D8F8;
+  --rail:#091529;--sidebar:#0D1B3E;
+  --shadow:0 2px 10px rgba(0,0,0,0.06);
+  font-family:'Plus Jakarta Sans',sans-serif;
+}
+body{background:var(--bg);display:flex;align-items:center;justify-content:center;min-height:100vh;padding:0;}
+.app{display:flex;width:100vw;height:100vh;background:var(--surface);overflow:hidden;}
+
+/* ── RAIL ── */
+.rail{width:56px;background:var(--rail);display:flex;flex-direction:column;align-items:center;padding:14px 0;gap:4px;flex-shrink:0;z-index:10;}
+.rail-logo{width:32px;height:32px;background:var(--brand);border-radius:8px;display:flex;align-items:center;justify-content:center;margin-bottom:10px;cursor:pointer;}
+.rail-logo svg{width:17px;height:17px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.rib{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background 0.15s;position:relative;}
+.rib:hover{background:rgba(255,255,255,0.08);}
+.rib.active{background:var(--brand);}
+.rib svg{width:17px;height:17px;fill:none;stroke:rgba(255,255,255,0.4);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+.rib.active svg,.rib:hover svg{stroke:rgba(255,255,255,0.9);}
+.rib-badge{position:absolute;top:4px;right:4px;width:8px;height:8px;border-radius:50%;background:#D85A30;border:2px solid var(--rail);}
+.rsep{width:28px;height:0.5px;background:rgba(255,255,255,0.1);margin:4px 0;}
+.rav{width:30px;height:30px;border-radius:50%;background:var(--brand);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;margin-top:auto;cursor:pointer;}
+
+/* ── SIDEBAR ── */
+.sidebar{width:230px;background:var(--sidebar);display:flex;flex-direction:column;flex-shrink:0;border-right:1px solid rgba(255,255,255,0.04);}
+.sb-head{padding:12px 10px 6px;}
+.sb-org{display:flex;align-items:center;gap:8px;padding:5px 6px;border-radius:7px;cursor:pointer;margin-bottom:4px;}
+.sb-org:hover{background:rgba(255,255,255,0.05);}
+.org-av{width:26px;height:26px;border-radius:6px;background:var(--brand);display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:#fff;flex-shrink:0;}
+.org-name{font-size:13px;font-weight:600;color:rgba(255,255,255,0.9);flex:1;}
+.sb-search{margin:0 7px 6px;padding:6px 10px;background:rgba(255,255,255,0.07);border:0.5px solid rgba(255,255,255,0.1);border-radius:7px;font-size:13px;font-family:'Plus Jakarta Sans',sans-serif;color:rgba(255,255,255,0.7);outline:none;width:calc(100% - 14px);}
+.sb-search::placeholder{color:rgba(255,255,255,0.2);}
+.sb-scroll{flex:1;overflow-y:auto;padding-bottom:10px;}
+.sb-scroll::-webkit-scrollbar{width:2px;}
+.sb-scroll::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:2px;}
+.sb-sec{padding:8px 10px 3px;font-size:9px;font-weight:600;color:rgba(255,255,255,0.2);text-transform:uppercase;letter-spacing:0.08em;display:flex;align-items:center;justify-content:space-between;}
+.sb-sec-btn{border:none;background:transparent;color:rgba(255,255,255,0.2);cursor:pointer;font-size:15px;line-height:1;padding:0;}
+.sb-sec-btn:hover{color:rgba(255,255,255,0.5);}
+.sbi{display:flex;align-items:center;gap:7px;padding:5px 10px;cursor:pointer;transition:background 0.1s;border-radius:0;}
+.sbi:hover{background:rgba(255,255,255,0.05);}
+.sbi.active{background:rgba(255,255,255,0.1);}
+.sbi-av{width:19px;height:19px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:7px;font-weight:700;flex-shrink:0;}
+.sbi-icon{width:19px;height:19px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;}
+.sbi-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.sbi-lbl{font-size:13px;color:rgba(255,255,255,0.45);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sbi.active .sbi-lbl,.sbi:hover .sbi-lbl{color:rgba(255,255,255,0.9);}
+.sbi-badge{font-size:8px;padding:1px 5px;border-radius:10px;background:#D85A30;color:#fff;font-weight:700;flex-shrink:0;}
+.online-dot{width:6px;height:6px;border-radius:50%;background:var(--brand2);flex-shrink:0;}
+.dept-arrow{font-size:10px;color:rgba(255,255,255,0.2);transition:transform 0.2s;flex-shrink:0;}
+.dept-arrow.open{transform:rotate(90deg);}
+/* subdept items */
+.subdept-row{display:flex;align-items:center;padding:4px 6px 4px 10px;cursor:pointer;gap:5px;transition:background .1s;user-select:none;}
+.subdept-row:hover{background:rgba(255,255,255,0.05);}
+.subdept-row.active{background:rgba(255,255,255,0.10);}
+.subdept-row.dragging{opacity:0.35;background:rgba(255,255,255,0.04);}
+.subdept-row.drag-over-above{border-top:2px solid var(--brand3);}
+.subdept-row.drag-over-below{border-bottom:2px solid var(--brand3);}
+.subdept-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0;}
+.subdept-lbl{font-size:12px;color:rgba(255,255,255,0.38);flex:1;}
+.subdept-row.active .subdept-lbl,.subdept-row:hover .subdept-lbl{color:rgba(255,255,255,0.82);}
+.subdept-tt{font-size:7px;padding:1px 4px;border-radius:3px;font-weight:600;flex-shrink:0;}
+.drag-grip{width:16px;height:26px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2.5px;flex-shrink:0;cursor:grab;opacity:0;transition:opacity .15s;padding:0 2px;}
+.drag-grip:active{cursor:grabbing;}
+.subdept-row:hover .drag-grip{opacity:1;}
+.drag-grip span{display:block;width:10px;height:1.5px;background:rgba(255,255,255,0.35);border-radius:2px;}
+.tt-1{background:rgba(29,158,117,0.25);color:#A8C3E8;}
+.tt-2{background:rgba(83,74,183,0.25);color:#AFA9EC;}
+.tt-3{background:rgba(186,117,23,0.25);color:#F5D08A;}
+.subdept-unread{font-size:8px;padding:1px 4px;border-radius:8px;background:#D85A30;color:#fff;font-weight:700;flex-shrink:0;}
+.add-row{display:flex;align-items:center;gap:7px;padding:4px 10px;cursor:pointer;opacity:0.4;}
+.add-row:hover{opacity:0.7;}
+.add-row span{font-size:12px;color:rgba(255,255,255,0.6);font-style:italic;}
+
+/* ── MAIN ── */
+.main{flex:1;display:flex;flex-direction:column;min-width:0;background:var(--surface);}
+.topbar{height:50px;padding:0 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;gap:10px;}
+.tb-left{display:flex;align-items:center;gap:9px;min-width:0;}
+.tb-av{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0;}
+.tb-av.square{border-radius:6px;}
+.tb-av.hash{background:var(--bl);color:var(--brand);font-size:15px;font-weight:700;}
+.tb-info{min-width:0;}
+.tb-title{font-size:13px;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.tb-sub{font-size:10px;color:var(--text-3);white-space:nowrap;}
+.tb-right{display:flex;gap:5px;align-items:center;flex-shrink:0;}
+.tbb{display:flex;align-items:center;gap:4px;padding:5px 11px;border:1px solid var(--border);border-radius:7px;font-size:12px;color:var(--text-2);cursor:pointer;background:transparent;font-family:'Plus Jakarta Sans',sans-serif;transition:all 0.15s;white-space:nowrap;}
+.tbb:hover{border-color:var(--brand);color:var(--brand);background:var(--bl);}
+.tbb.prim{background:var(--brand);color:#fff;border-color:var(--brand);}
+.tbb.prim:hover{background:#142D5C;}
+.tbb svg{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+
+/* ── TABS ── */
+.tabbar{display:flex;border-bottom:1px solid var(--border);padding:0 14px;flex-shrink:0;overflow-x:auto;}
+.tabbar::-webkit-scrollbar{display:none;}
+.tab{padding:8px 12px;font-size:13px;cursor:pointer;color:var(--text-3);border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap;flex-shrink:0;transition:all 0.15s;}
+.tab:hover{color:var(--text-2);}
+.tab.active{color:var(--brand);border-bottom-color:var(--brand);font-weight:500;}
+
+/* ── CHAT ── */
+.chat-area{flex:1;display:flex;flex-direction:column;min-height:0;background:var(--bg);}
+.chat-msgs{flex:1;overflow-y:auto;padding:14px 16px 8px;display:flex;flex-direction:column;gap:1px;}
+.chat-msgs::-webkit-scrollbar{width:4px;}
+.chat-msgs::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+.date-sep{display:flex;align-items:center;gap:10px;margin:10px 0 8px;}
+.date-line{flex:1;height:0.5px;background:var(--border);}
+.date-lbl{font-size:10px;color:var(--text-3);font-weight:500;}
+.sys-pill{align-self:center;background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:4px 14px;font-size:10px;color:var(--text-3);margin:6px 0;}
+/* message */
+.msg-group{margin-bottom:2px;}
+.msg-row{display:flex;align-items:flex-end;gap:9px;}
+.msg-row.mine{flex-direction:row-reverse;}
+.msg-av{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0;align-self:flex-start;margin-top:3px;}
+.msg-col{display:flex;flex-direction:column;max-width:64%;}
+.msg-row.mine .msg-col{align-items:flex-end;}
+.msg-sender{font-size:10px;font-weight:600;color:var(--text-2);margin-bottom:3px;margin-left:2px;}
+.bubble{padding:9px 13px;border-radius:16px;font-size:13px;line-height:1.55;color:var(--text);background:var(--surface);border:1px solid var(--border);word-break:break-word;position:relative;}
+.bubble.mine{background:var(--brand);color:#fff;border-color:var(--brand);}
+.msg-time{font-size:10px;color:var(--text-3);margin-top:3px;margin-left:2px;}
+.msg-row.mine .msg-time{text-align:right;margin-right:2px;margin-left:0;color:var(--text-3);}
+/* attachment inside bubble */
+.att-card{display:flex;align-items:center;gap:8px;padding:8px 11px;background:rgba(255,255,255,0.18);border-radius:10px;margin-top:6px;cursor:pointer;}
+.att-card.light{background:var(--bg);border:1px solid var(--border);}
+.att-icon{font-size:20px;flex-shrink:0;}
+.att-info{flex:1;min-width:0;}
+.att-name{font-size:11px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.att-sz{font-size:10px;opacity:0.65;}
+/* reactions */
+.rxn-row{display:flex;gap:4px;margin-top:4px;flex-wrap:wrap;}
+.rxn-pill{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;background:var(--surface);border:1px solid var(--border);border-radius:20px;font-size:11px;cursor:pointer;transition:all 0.15s;}
+.rxn-pill:hover,.rxn-pill.me{background:var(--bl);border-color:var(--bb);}
+.rxn-pill span{font-size:10px;color:var(--text-2);}
+
+/* composer */
+.composer{padding:10px 14px 14px;background:var(--surface);border-top:1px solid var(--border);flex-shrink:0;}
+.comp-toolbar{display:flex;gap:2px;margin-bottom:6px;}
+.ctool{width:30px;height:30px;border-radius:7px;display:flex;align-items:center;justify-content:center;border:none;background:transparent;cursor:pointer;font-size:15px;color:var(--text-3);transition:all 0.15s;}
+.ctool:hover{background:var(--bg);color:var(--brand);}
+.ctool svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+.comp-row{display:flex;align-items:flex-end;gap:8px;}
+.comp-input{flex:1;min-height:38px;max-height:120px;padding:9px 13px;border:1px solid var(--border);border-radius:20px;font-size:13px;font-family:'Plus Jakarta Sans',sans-serif;color:var(--text);background:var(--bg);outline:none;resize:none;line-height:1.4;}
+.comp-input:focus{border-color:var(--brand);background:#fff;}
+.send-btn{width:36px;height:36px;border-radius:50%;background:var(--brand);display:flex;align-items:center;justify-content:center;cursor:pointer;border:none;flex-shrink:0;transition:all 0.15s;}
+.send-btn:hover{background:#142D5C;transform:scale(1.05);}
+.send-btn svg{width:15px;height:15px;fill:none;stroke:#fff;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+
+/* ── NON-CHAT CONTENT ── */
+.content{flex:1;overflow-y:auto;background:var(--bg);}
+.content::-webkit-scrollbar{width:4px;}
+.content::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+.month-nav{display:flex;gap:5px;padding:8px 12px;border-bottom:1px solid var(--border);background:var(--surface);flex-wrap:wrap;}
+.mnt{padding:4px 12px;font-size:13px;cursor:pointer;border-radius:6px;color:var(--text-2);}
+.mnt.active{background:var(--brand);color:#fff;font-weight:500;}
+.week-nav{display:flex;gap:4px;padding:6px 12px;border-bottom:1px solid var(--border);background:var(--surface);}
+.wnt{padding:3px 10px;font-size:13px;cursor:pointer;border:1px solid var(--border);border-radius:6px;color:var(--text-2);}
+.wnt.active{background:var(--bl);border-color:var(--brand);color:var(--brand);font-weight:500;}
+.pw{padding:10px 12px;display:flex;flex-direction:column;gap:8px;}
+.fc{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;}
+.fch{padding:9px 12px;border-bottom:1px solid var(--border);background:#f9fbfa;display:flex;align-items:center;justify-content:space-between;}
+.fch h4{font-size:13px;font-weight:600;color:var(--text);}
+.fcb{padding:10px 12px;}
+.fr{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:8px;align-items:flex-end;}
+.fd{display:flex;flex-direction:column;flex:1;min-width:90px;}
+.fd.wide{flex:2;}
+.fl{font-size:10px;font-weight:600;color:var(--text-3);margin-bottom:3px;text-transform:uppercase;letter-spacing:0.04em;}
+.fi{width:100%;padding:5px 9px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:'Plus Jakarta Sans',sans-serif;color:var(--text);outline:none;background:var(--surface);height:30px;}
+.fi:focus{border-color:var(--brand);}
+.mon-sec{background:var(--blue-light);border:1px solid var(--blue-border);border-radius:8px;padding:9px 11px;margin-bottom:8px;}
+.mon-head{display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap;}
+.mon-badge{background:var(--blue);color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;white-space:nowrap;}
+.mon-sel{padding:3px 8px;border:1px solid var(--blue-border);border-radius:5px;font-size:13px;font-family:'Plus Jakarta Sans',sans-serif;color:#0C447C;outline:none;background:#fff;cursor:pointer;}
+.mfl{font-size:10px;font-weight:600;color:var(--blue);margin-bottom:3px;text-transform:uppercase;letter-spacing:0.04em;}
+.mfi{width:100%;padding:5px 9px;border:1px solid var(--blue-border);border-radius:6px;font-size:13px;font-family:'Plus Jakarta Sans',sans-serif;color:var(--text);outline:none;background:#fff;height:30px;}
+.csec{display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;}
+.csec span{font-size:11px;font-weight:600;color:var(--text-2);text-transform:uppercase;letter-spacing:0.04em;}
+.add-c-btn{padding:4px 11px;background:var(--bl);color:var(--brand);border:1px solid var(--bb);border-radius:5px;font-size:12px;font-weight:500;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;}
+.col-lbl-row{display:grid;grid-template-columns:1fr 100px 28px;gap:7px;padding:0 3px;margin-bottom:3px;}
+.cl{font-size:10px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:0.04em;}
+.cl.r{text-align:right;}
+.cr{display:grid;grid-template-columns:1fr 100px 28px auto;gap:7px;align-items:center;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:5px 9px;margin-bottom:4px;}
+.inp-cn{width:100%;padding:5px 8px;border:1px solid var(--border);border-radius:5px;font-size:13px;font-family:'Plus Jakarta Sans',sans-serif;color:var(--text);outline:none;background:var(--surface);height:30px;}
+.inp-cn:focus{border-color:var(--brand);}
+.inp-cq{width:100%;padding:5px 7px;border:1px solid var(--border);border-radius:5px;font-size:13px;font-family:'Plus Jakarta Sans',sans-serif;color:var(--text);outline:none;background:var(--surface);height:30px;text-align:right;}
+.inp-cq:focus{border-color:var(--brand);}
+.pcs-lbl{font-size:11px;color:var(--text-3);}
+.rm-btn{padding:2px 7px;border:1px solid var(--border);border-radius:4px;font-size:11px;cursor:pointer;background:transparent;color:var(--error);font-family:'Plus Jakarta Sans',sans-serif;height:26px;}
+.rm-btn:hover{background:var(--error);color:#fff;}
+.rw{margin-bottom:4px;}
+.mode-row{display:flex;align-items:center;gap:5px;padding:0 3px;margin-top:3px;}
+.mode-tog{display:flex;border:1px solid var(--border);border-radius:5px;overflow:hidden;}
+.mt-b{padding:3px 10px;font-size:11px;cursor:pointer;color:var(--text-2);border:none;background:transparent;font-family:'Plus Jakarta Sans',sans-serif;}
+.mt-b.active{background:var(--brand);color:#fff;font-weight:500;}
+.szrow{width:100%;border-collapse:collapse;margin-top:4px;}
+.szrow th{padding:3px 4px;background:var(--surface);border:1px solid var(--border);font-weight:600;color:var(--text-3);text-align:center;font-size:10px;}
+.szrow td{padding:2px;border:1px solid var(--border);text-align:center;}
+.szrow input{width:100%;padding:3px;border:none;outline:none;font-size:12px;font-family:'Plus Jakarta Sans',sans-serif;color:var(--text);background:transparent;text-align:center;}
+.szrow input:focus{background:var(--bl);}
+.sub-btn{width:100%;padding:8px;background:var(--brand);color:#fff;border:none;border-radius:7px;font-size:13px;font-weight:500;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;margin-top:6px;}
+.sub-btn:hover{background:#142D5C;}
+.slc{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden;}
+.slch{padding:8px 12px;border-bottom:1px solid var(--border);background:#f9fbfa;}
+.slch h4{font-size:13px;font-weight:600;color:var(--text);}
+.se{border-bottom:1px solid var(--border);padding:9px 12px;}
+.se:last-child{border-bottom:none;}
+.se-head{display:flex;align-items:center;gap:8px;margin-bottom:5px;flex-wrap:wrap;}
+.sc{font-weight:700;color:var(--brand);font-family:'JetBrains Mono',monospace;font-size:12px;}
+.mtag{font-size:11px;color:var(--text-3);}
+.se-body{display:flex;gap:12px;flex-wrap:wrap;}
+.se-mon{background:var(--blue-light);border:1px solid var(--blue-border);border-radius:7px;padding:7px 10px;min-width:185px;}
+.se-mon-title{font-size:9px;font-weight:700;color:var(--blue);text-transform:uppercase;margin-bottom:5px;display:flex;align-items:center;gap:4px;}
+.se-mon-badge{background:var(--blue);color:#fff;font-size:8px;font-weight:700;padding:1px 5px;border-radius:3px;}
+.se-mon-row{display:flex;gap:9px;flex-wrap:wrap;}
+.se-mon-item{display:flex;flex-direction:column;gap:1px;}
+.se-mon-lbl{font-size:9px;color:#5B8FBF;text-transform:uppercase;}
+.se-mon-val{font-size:12px;font-weight:600;color:#0C447C;}
+/* T2 */
+.wgh{background:#EEF4FF;}
+.wgh td{padding:6px 10px;font-size:13px;font-weight:600;color:var(--brand);border-bottom:1px solid var(--border);}
+.sbar{padding:7px 12px;border-bottom:1px solid var(--border);background:var(--surface);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:5px;font-size:13px;}
+.tblw{overflow-x:auto;padding:10px 12px;}
+.bt{width:100%;border-collapse:collapse;border:1px solid var(--border);background:var(--surface);}
+.bt th{padding:7px 9px;font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;background:#f9fbfa;border:1px solid var(--border);text-align:left;white-space:nowrap;}
+.bt th.mth{background:var(--blue-light);color:var(--blue);border-color:var(--blue-border);}
+.bt td{padding:7px 9px;font-size:13px;color:var(--text);border:1px solid var(--border);vertical-align:middle;}
+.bt td.mtd{background:#F4F9FF;border-color:var(--blue-border);}
+.bt tr:hover td{background:#f5faf7;}
+.bt tr:hover td.mtd{background:#EEF6FF;}
+.cc{min-width:170px;}
+.qc{width:78px;}
+.sp{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:500;white-space:nowrap;cursor:pointer;}
+.sp-done{background:#EBF2FF;color:#0F2448;}
+.sp-prog{background:#FAEEDA;color:#633806;}
+.sp-none{background:#F1EFE8;color:#555552;}
+.ul-note{font-size:10px;color:var(--brand);margin-top:2px;}
+/* T3 */
+.qcell{display:flex;flex-direction:column;gap:3px;}
+.qline{display:flex;align-items:center;gap:4px;}
+.qi{width:66px;padding:4px 7px;border:1px solid var(--border);border-radius:6px;font-size:13px;font-family:'Plus Jakarta Sans',sans-serif;color:var(--text);outline:none;height:27px;}
+.qi:focus{border-color:var(--brand);}
+.qi:disabled{background:var(--bg);color:var(--text-3);cursor:not-allowed;}
+.qi.warn{border-color:var(--amber);}
+.sq{padding:4px 9px;background:var(--brand);color:#fff;border:none;border-radius:5px;font-size:11px;font-weight:500;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;height:27px;}
+.sq:disabled{background:var(--border);cursor:not-allowed;}
+.qa{font-size:10px;color:var(--brand);}
+.ql{font-size:10px;color:var(--amber);}
+.pb{height:4px;background:var(--border);border-radius:2px;overflow:hidden;margin-top:3px;min-width:60px;}
+.pf{height:100%;background:var(--brand);border-radius:2px;transition:width 0.4s;}
+/* Daily log grid */
+.lgw{padding:10px 12px;display:flex;flex-direction:column;gap:10px;}
+.lgs{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;}
+.sc2{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 12px;text-align:center;}
+.sn{font-size:18px;font-weight:700;color:var(--text);}
+.sl{font-size:10px;color:var(--text-3);margin-top:2px;}
+.ss{font-size:10px;color:var(--brand);margin-top:1px;}
+.go{background:var(--surface);border:1px solid var(--border);border-radius:9px;overflow:hidden;}
+.gscr{overflow-x:auto;}
+table.lg{border-collapse:collapse;white-space:nowrap;font-size:12px;}
+table.lg thead th{padding:6px 5px;font-size:10px;font-weight:600;color:var(--text-3);text-transform:uppercase;background:#f9fbfa;border:1px solid var(--border);text-align:center;min-width:30px;}
+table.lg thead th.sc3{text-align:left;min-width:80px;position:sticky;left:0;z-index:2;background:#f9fbfa;}
+table.lg thead th.byc{text-align:left;min-width:55px;}
+table.lg thead th.totc{min-width:60px;background:#EEF4FF;color:var(--brand);position:sticky;right:0;z-index:2;}
+table.lg thead th.tdc{background:#EBF2FF;color:#0F2448;}
+table.lg thead th.sunc{background:#f5f5f5;color:#ccc;}
+table.lg thead th.dname{font-size:8px;font-weight:500;color:var(--text-3);padding:2px 5px;background:#f9fbfa;border:1px solid var(--border);}
+table.lg thead th.dname.sunc{background:#f5f5f5;color:#ddd;}
+table.lg thead th.dname.tdc{background:#EBF2FF;color:#0F2448;}
+table.lg tbody tr:nth-child(odd) td{background:#fdfefe;}
+table.lg tbody tr:hover td{background:#EEF4FF;}
+table.lg tbody td{padding:6px 5px;font-size:12px;color:var(--text);border:1px solid var(--border);text-align:center;min-width:30px;}
+table.lg tbody td.sc3{text-align:left;font-weight:700;color:var(--brand);font-family:'JetBrains Mono',monospace;font-size:11px;position:sticky;left:0;z-index:1;background:#fff;padding-right:8px;}
+table.lg tbody tr:nth-child(odd) td.sc3{background:#fdfefe;}
+table.lg tbody td.byc{text-align:left;font-size:11px;color:var(--text-2);}
+table.lg tbody td.totc{font-weight:700;color:var(--brand);background:#EEF4FF;position:sticky;right:0;z-index:1;}
+table.lg tbody td.tdc{background:#EBF2FF;}
+table.lg tbody td.sunc{background:#f5f5f5;color:#ddd;font-size:10px;}
+table.lg tbody td.hq{font-weight:700;color:var(--text);}
+table.lg tfoot td{padding:6px 5px;font-size:12px;font-weight:600;background:#EEF4FF;border:1px solid var(--border);text-align:center;color:var(--brand);}
+table.lg tfoot td.sc3{text-align:left;position:sticky;left:0;z-index:1;background:#EEF4FF;font-size:11px;color:var(--text-2);font-weight:600;}
+table.lg tfoot td.byc{background:#EEF4FF;color:var(--text-3);}
+table.lg tfoot td.totc{position:sticky;right:0;z-index:1;background:#D1E4FF;}
+table.lg tfoot td.sunc{background:#f5f5f5;color:#ddd;}
+table.lg tfoot td.tdc{background:#EBF2FF;}
+.cstrip{padding:10px 12px;border-top:1px solid var(--border);}
+.crow{display:flex;align-items:center;gap:8px;margin-bottom:5px;}
+.crow:last-child{margin-bottom:0;}
+.cc2{font-size:11px;font-weight:700;color:var(--brand);font-family:'JetBrains Mono',monospace;min-width:55px;}
+.cbw{flex:1;height:5px;background:var(--border);border-radius:3px;overflow:hidden;}
+.cbf{height:100%;background:var(--brand);border-radius:3px;}
+.cp{font-size:11px;color:var(--text-3);min-width:30px;text-align:right;}
+.cn2{font-size:11px;color:var(--text-2);min-width:100px;text-align:right;}
+/* Reports */
+.rpw{width:100%;padding:10px 12px;display:flex;flex-direction:column;gap:10px;box-sizing:border-box;}
+.rp-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.rpc{background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:11px 13px;}
+.rpc-h{font-size:10px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:6px;display:flex;align-items:center;gap:5px;}
+.rpc-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.rpc-n{font-size:22px;font-weight:700;color:var(--text);margin-bottom:2px;}
+.rpc-s{font-size:11px;color:var(--text-3);}
+.rpc-bar{height:4px;background:var(--border);border-radius:2px;overflow:hidden;margin-top:7px;}
+.rpc-fill{height:100%;border-radius:2px;}
+.rds{background:var(--surface);border:1px solid var(--border);border-radius:9px;overflow:hidden;}
+.rdh{padding:9px 12px;border-bottom:1px solid var(--border);background:#f9fbfa;display:flex;align-items:center;gap:8px;}
+.rdh-title{font-size:13px;font-weight:600;color:var(--text);flex:1;}
+.rdh-total{font-size:13px;font-weight:700;color:var(--brand);}
+.rpt{width:100%;border-collapse:collapse;}
+.rpt th{padding:6px 10px;font-size:10px;font-weight:600;color:var(--text-3);text-transform:uppercase;background:#f9fbfa;border:1px solid var(--border);text-align:left;}
+.rpt th.mth{background:var(--blue-light);color:var(--blue);border-color:var(--blue-border);}
+.rpt td{padding:7px 10px;font-size:13px;color:var(--text);border:1px solid var(--border);vertical-align:middle;}
+.rpt td.mtd{background:#F4F9FF;border-color:var(--blue-border);}
+.rpb{height:5px;background:var(--border);border-radius:3px;overflow:hidden;min-width:70px;}
+.rpbf{height:100%;background:var(--brand);border-radius:3px;}
+/* Groups/DM panel */
+.members-panel{flex:1;display:flex;flex-direction:column;}
+.members-list{flex:1;overflow-y:auto;padding:10px 12px;display:flex;flex-direction:column;gap:5px;}
+.member-row{display:flex;align-items:center;gap:9px;padding:8px 10px;background:var(--surface);border:1px solid var(--border);border-radius:8px;}
+.member-av{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0;}
+.member-info{flex:1;}
+.member-name{font-size:13px;font-weight:500;color:var(--text);}
+.member-role{font-size:11px;color:var(--text-3);}
+.member-online{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+/* Modal */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,0.35);display:flex;align-items:center;justify-content:center;z-index:500;}
+.modal{background:var(--surface);border-radius:14px;padding:20px;width:340px;max-height:90vh;overflow-y:auto;border:1px solid var(--border);box-shadow:0 20px 60px rgba(0,0,0,0.15);animation:popIn 0.18s ease;}
+@keyframes popIn{from{opacity:0;transform:scale(0.95);}to{opacity:1;transform:scale(1);}}
+.modal h3{font-size:16px;font-weight:700;color:var(--text);margin-bottom:4px;}
+.modal p{font-size:12px;color:var(--text-3);margin-bottom:12px;line-height:1.5;}
+.modal label{display:block;font-size:11px;font-weight:600;color:var(--text-2);margin-bottom:3px;}
+.modal input,.modal select,.modal textarea{width:100%;padding:7px 10px;border:1px solid var(--border);border-radius:7px;font-size:13px;font-family:'Plus Jakarta Sans',sans-serif;color:var(--text);outline:none;margin-bottom:10px;background:var(--surface);}
+.modal input:focus,.modal select:focus,.modal textarea:focus{border-color:var(--brand);}
+.modal textarea{resize:none;height:60px;}
+.modal-btns{display:flex;gap:7px;margin-top:4px;}
+.mbb{flex:1;padding:7px;border-radius:8px;font-size:13px;font-weight:500;font-family:'Plus Jakarta Sans',sans-serif;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--text-2);}
+.mbb:hover{background:var(--bg);}
+.mbb.prim{background:var(--brand);color:#fff;border-color:var(--brand);}
+.mbb.prim:hover{background:#142D5C;}
+.cs-row{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;}
+.cs{width:20px;height:20px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:all 0.15s;}
+.cs.sel{border-color:var(--text);transform:scale(1.15);}
+.info-pill{display:flex;align-items:flex-start;gap:6px;background:var(--bl);border:1px solid var(--bb);border-radius:7px;padding:7px 10px;font-size:11px;color:#0F2448;line-height:1.5;margin-bottom:10px;}
+.type-help{font-size:11px;color:var(--text-3);margin:-6px 0 10px;line-height:1.5;}
+/* Welcome screen */
+.welcome{flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;background:var(--bg);}
+.welcome-icon{width:64px;height:64px;border-radius:16px;background:var(--bl);display:flex;align-items:center;justify-content:center;font-size:30px;}
+.welcome-title{font-size:16px;font-weight:600;color:var(--text);}
+.welcome-sub{font-size:13px;color:var(--text-3);text-align:center;max-width:260px;line-height:1.6;}
+/* Toast */
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#091529;color:#fff;padding:7px 16px;border-radius:25px;font-size:13px;white-space:nowrap;z-index:999;animation:toastIn 0.2s ease;pointer-events:none;}
+@keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(6px);}to{opacity:1;transform:translateX(-50%) translateY(0);}}
+.hidden{display:none!important;}
+/* DM header */
+.dm-status{display:inline-flex;align-items:center;gap:4px;font-size:10px;color:var(--text-3);}
+.dm-online{width:7px;height:7px;border-radius:50%;background:var(--brand2);}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <!-- RAIL -->
+  <div class="rail">
+    <div class="rail-logo" onclick="openProfile()" title="Zerem" style="font-size:15px;font-weight:800;letter-spacing:-.5px;font-family:'Plus Jakarta Sans',sans-serif;">Z</div>
+    <div class="rib active" id="rib-inbox" title="All messages" onclick="openInbox()"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
+    <div class="rib" onclick="openDashboard()" title="Dashboard"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg></div>
+    <div class="rib" onclick="navReportsRail()" title="Daily Production Report"><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
+    <div class="rsep"></div>
+    <div class="rib" onclick="openSettings()" title="Settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></div>
+    <div class="rav" onclick="openProfile()" title="My profile — Sarah Chen">SC</div>
+  </div>
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sb-head">
+      <div class="sb-org" onclick="openOrgPage()" style="cursor:pointer;">
+        <div class="org-av">AC</div>
+        <span class="org-name">Acme Corp</span>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+      </div>
+      <input class="sb-search" placeholder="🔍  Search..." id="sb-search" oninput="handleSearch(this.value)"/>
+    </div>
+    <div class="sb-scroll" id="sb-scroll">
+      <!-- Departments -->
+      <div class="sb-sec"><span>Departments</span></div>
+      <div class="sbi" id="sb-ops" onclick="toggleOps(event)">
+        <div class="sbi-dot" style="background:#2456A4;"></div>
+        <span class="sbi-lbl">Operations</span>
+        <span class="dept-arrow open" id="ops-arrow">›</span>
+      </div>
+      <div id="ops-subs">
+        <div id="subs-list"></div>
+        <div class="add-row" onclick="openModal('addSubdept')"><span>+ Add sub-department</span></div>
+      </div>
+      <div class="sbi" id="ni-hr" onclick="openDept('hr')">
+        <div class="sbi-dot" style="background:#C94B2C;"></div>
+        <span class="sbi-lbl">HR</span>
+      </div>
+      <div class="sbi" id="ni-accounts" onclick="openDept('accounts')">
+        <div class="sbi-dot" style="background:#534AB7;"></div>
+        <span class="sbi-lbl">Accounts</span>
+      </div>
+
+      <!-- Groups -->
+      <div class="sb-sec"><span>Groups</span><button class="sb-sec-btn" onclick="openModal('newGroup')">+</button></div>
+      <div id="groups-list"></div>
+      <!-- DMs -->
+      <div class="sb-sec"><span>Direct messages</span><button class="sb-sec-btn" onclick="openModal('newDM')">+</button></div>
+      <div id="dms-list"></div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main" id="main">
+    <div class="topbar" id="topbar">
+      <div class="tb-left">
+        <div class="tb-av hash">#</div>
+        <div class="tb-info">
+          <div class="tb-title" id="tb-title">Select a conversation</div>
+          <div class="tb-sub" id="tb-sub">Zerem · Acme Corp</div>
+        </div>
+      </div>
+      <div class="tb-right" id="tb-right"></div>
+    </div>
+    <div class="tabbar hidden" id="tabbar"></div>
+    <div id="mc" style="flex:1;display:flex;flex-direction:column;min-height:0;overflow:hidden;">
+      <div class="welcome">
+        <div class="welcome-icon">💬</div>
+        <div class="welcome-title">Welcome to Zerem</div>
+        <div class="welcome-sub">Select a department, group, or direct message from the sidebar to get started.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL -->
+  <div class="overlay hidden" id="overlay" onclick="closeOverlayClick(event)">
+    <div class="modal" id="modal-body" onclick="event.stopPropagation()"></div>
+  </div>
+</div>
+
+<script>
+// ── CONSTANTS ──
+const MONTHS=['July 2025','August 2025','September 2025'];
+const MONTH_META=[{year:2025,month:6,days:31},{year:2025,month:7,days:31},{year:2025,month:8,days:30}];
+const WEEKS=['Week 1','Week 2','Week 3','Week 4'];
+const SIZES=['XS','S','M','L','XL','XXL'];
+const COLORS=['#2456A4','#534AB7','#D85A30','#BA7517','#185FA5','#D4537E','#087A6B','#8B5CF6'];
+const DAY_NAMES=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const T3_LIST=[{id:'sewing',name:'Sewing',color:'#BA7517'},{id:'qc',name:'QC',color:'#D85A30'},{id:'packing',name:'Packing',color:'#185FA5'}];
+const BS_DONE='display:block;width:100%;padding:6px 0;margin-bottom:4px;background:#1B3A6B;color:#fff;border:none;border-radius:5px;font-size:12px;font-weight:700;font-family:sans-serif;cursor:pointer;text-align:center;';
+const BS_START='display:block;width:100%;padding:6px 0;margin-bottom:4px;background:#BA7517;color:#fff;border:none;border-radius:5px;font-size:12px;font-weight:700;font-family:sans-serif;cursor:pointer;text-align:center;';
+const BS_RESET='display:block;width:100%;padding:6px 0;background:#6b7280;color:#fff;border:none;border-radius:5px;font-size:12px;font-weight:700;font-family:sans-serif;cursor:pointer;text-align:center;';
+
+// ── STATE ──
+let currentView=null; // {type:'subdept'|'dept'|'group'|'dm'|'reports', id}
+let activeTab='messages', activeMonth=0, activeWeek=0, reportMonth=0, opsOpen=true, selColor='#2456A4';
+let colourRowCount=0, colourRowModes={};
+let toastTimer;
+
+// ── SUBS ──
+let SUBS=[
+  {id:'planning',name:'Planning',type:1,color:'#2456A4',label:'Master planning input',unread:0,locked:true},
+  {id:'preparation',name:'Preparation',type:2,color:'#534AB7',label:'Priority & preparation status',dependsOn:'planning',unread:2,locked:true},
+  {id:'sewing',name:'Sewing',type:3,color:'#BA7517',label:'Daily qty — pcs sewn',recordLabel:'pcs sewn',dependsOn:'preparation',statusKey:'sewingStatus',unread:0,locked:false},
+  {id:'qc',name:'QC',type:3,color:'#D85A30',label:'Daily qty — pcs inspected',recordLabel:'pcs inspected',dependsOn:'sewing',statusKey:'qcStatus',unread:5,locked:false},
+  {id:'packing',name:'Packing',type:3,color:'#185FA5',label:'Daily qty — pcs packed',recordLabel:'pcs packed',dependsOn:'qc',statusKey:'packingStatus',unread:1,locked:false},
+];
+
+// ── GROUPS ──
+let GROUPS=[
+  {id:'g-q3',name:'Q3 Launch',emoji:'🚀',color:'#EBF2FF',tc:'#0F2448',members:['SC','JO','AK','RK','LB'],desc:'Cross-team Q3 shipment & production coordination',unread:4},
+  {id:'g-ship',name:'Shipment Alerts',emoji:'🚢',color:'#EEF6FF',tc:'#0C447C',members:['SC','LB','RK'],desc:'Urgent shipping, customs, and export updates',unread:0},
+  {id:'g-fab',name:'Fabric & Materials',emoji:'🧵',color:'#FAEEDA',tc:'#633806',members:['SC','AK','JO'],desc:'Fabric arrivals, quality issues, accessories',unread:1},
+  {id:'g-mgmt',name:'Management',emoji:'🏛️',color:'#F4F0FF',tc:'#4A1D96',members:['SC','JO'],desc:'Leadership & management channel',unread:0},
+];
+
+// ── DMS ──
+let DMS=[
+  {id:'dm-rk',name:'Raj Kumar',av:'RK',bg:'#FAEEDA',tc:'#633806',role:'QC Head',online:true,unread:0},
+  {id:'dm-jo',name:'James Obi',av:'JO',bg:'#FAECE7',tc:'#712B13',role:'Operations Head',online:true,unread:3},
+  {id:'dm-ak',name:'Ama Kofi',av:'AK',bg:'#E6F1FB',tc:'#0C447C',role:'Sewing Lead',online:false,unread:0},
+  {id:'dm-lb',name:'Lena Boateng',av:'LB',bg:'#EAF3DE',tc:'#27500A',role:'Packing Lead',online:false,unread:0},
+];
+
+// ── MESSAGES ──
+const MSGS={
+  planning:[
+    {sys:'Planning channel — master style input'},
+    {av:'JO',bg:'#FAECE7',tc:'#712B13',name:'James Obi',text:'ST-001 through ST-004 entered for July. Please confirm shipment dates.',time:'9:02 AM'},
+    {av:'SC',bg:'#2456A4',tc:'#fff',name:'Sarah Chen',text:'Confirmed. ST-003 shipment moved to Aug 6.',time:'9:15 AM',mine:true},
+    {av:'AK',bg:'#E6F1FB',tc:'#0C447C',name:'Ama Kofi',text:'Fabric for ST-003 arrives Jul 10 — fine for the revised date.',time:'9:20 AM'},
+  ],
+  preparation:[
+    {sys:'Preparation channel — priority & cut status'},
+    {av:'JO',bg:'#FAECE7',tc:'#712B13',name:'James Obi',text:'ST-001 and ST-002 fully prepared. Starting ST-003 today.',time:'8:30 AM'},
+    {av:'SC',bg:'#2456A4',tc:'#fff',name:'Sarah Chen',text:'Good. ST-004 must start by Jul 22 for the Aug 12 shipment.',time:'8:45 AM',mine:true},
+    {av:'RK',bg:'#FAEEDA',tc:'#633806',name:'Raj Kumar',text:'Can we get extra hands for ST-003? 2000 pcs, 2 colours.',time:'9:05 AM'},
+    {av:'SC',bg:'#2456A4',tc:'#fff',name:'Sarah Chen',text:'Approved — 2 more operators from tomorrow.',time:'9:10 AM',mine:true},
+  ],
+  sewing:[
+    {sys:'Sewing channel — pcs sewn tracked daily'},
+    {av:'AK',bg:'#E6F1FB',tc:'#0C447C',name:'Ama Kofi',text:'ST-001 at 700 pcs — on track for Jul 16 finish.',time:'8:15 AM'},
+    {av:'SC',bg:'#2456A4',tc:'#fff',name:'Sarah Chen',text:'Great. What about ST-002?',time:'8:22 AM',mine:true},
+    {av:'AK',bg:'#E6F1FB',tc:'#0C447C',name:'Ama Kofi',text:'ST-002 slow — machine was down yesterday.',time:'8:25 AM'},
+    {av:'JO',bg:'#FAECE7',tc:'#712B13',name:'James Obi',text:'Machine repaired. Back to full speed today.',time:'8:30 AM'},
+    {av:'SC',bg:'#2456A4',tc:'#fff',name:'Sarah Chen',text:'Good — hit the 80 pcs/day target for ST-002 today.',time:'8:35 AM',mine:true},
+    {av:'AK',bg:'#E6F1FB',tc:'#0C447C',name:'Ama Kofi',text:'Understood. Will update the log at end of shift.',time:'8:38 AM',att:{icon:'📊',name:'Sewing progress Jul 3.xlsx',size:'14 KB'}},
+    {av:'SC',bg:'#2456A4',tc:'#fff',name:'Sarah Chen',text:'Thanks — keep it up!',time:'8:40 AM',mine:true,rxn:[{e:'👍',n:2}]},
+  ],
+  qc:[
+    {sys:'QC channel — pcs inspected tracked daily'},
+    {av:'RK',bg:'#FAEEDA',tc:'#633806',name:'Raj Kumar',text:'QC on ST-001 started. First 80 pcs passed.',time:'2:00 PM'},
+    {av:'SC',bg:'#2456A4',tc:'#fff',name:'Sarah Chen',text:'Any rejections?',time:'2:05 PM',mine:true},
+    {av:'RK',bg:'#FAEEDA',tc:'#633806',name:'Raj Kumar',text:'3 pcs rejected — stitching issue. Sent back to Sewing.',time:'2:08 PM'},
+    {av:'SC',bg:'#2456A4',tc:'#fff',name:'Sarah Chen',text:'Noted. Log it and flag to James.',time:'2:12 PM',mine:true},
+  ],
+  packing:[
+    {sys:'Packing channel — pcs packed tracked daily'},
+    {av:'LB',bg:'#EAF3DE',tc:'#27500A',name:'Lena Boateng',text:'Packing materials for ST-001 ready. Waiting for QC clearance.',time:'3:00 PM'},
+    {av:'SC',bg:'#2456A4',tc:'#fff',name:'Sarah Chen',text:'QC should clear the first batch by end of today.',time:'3:05 PM',mine:true},
+  ],
+  hr:[
+    {sys:'HR department channel'},
+    {av:'LB',bg:'#EAF3DE',tc:'#27500A',name:'Lena Boateng',text:'Leave applications for next month have been submitted by the team.',time:'10:00 AM'},
+    {av:'SC',bg:'#2456A4',tc:'#fff',name:'Sarah Chen',text:'Noted. Will review and approve by Friday.',time:'10:15 AM',mine:true},
+  ],
+  accounts:[
+    {sys:'Accounts department channel'},
+    {av:'JO',bg:'#FAECE7',tc:'#712B13',name:'James Obi',text:'Invoice for fabric batch 3 has been received. Total: $12,400.',time:'11:00 AM'},
+    {av:'SC',bg:'#2456A4',tc:'#fff',name:'Sarah Chen',text:'Please process payment by end of week.',time:'11:10 AM',mine:true},
+  ],
+  'g-q3':[
+    {sys:'Q3 Launch — cross-team coordination'},
+    {av:'SC',bg:'#2456A4',tc:'#fff',name:'Sarah Chen',text:'Q3 planning kickoff — we need to finalise shipment schedule for Aug and Sep.',time:'9:00 AM',mine:true},
+    {av:'JO',bg:'#FAECE7',tc:'#712B13',name:'James Obi',text:'On it. Operations is ready with 12 styles planned for Aug.',time:'9:05 AM'},
+    {av:'AK',bg:'#E6F1FB',tc:'#0C447C',name:'Ama Kofi',text:'Sewing can handle up to 2500 pcs/week for Aug.',time:'9:08 AM'},
+    {av:'RK',bg:'#FAEEDA',tc:'#633806',name:'Raj Kumar',text:'QC team will be at full strength from Aug 4.',time:'9:12 AM'},
+    {av:'SC',bg:'#2456A4',tc:'#fff',name:'Sarah Chen',text:'Perfect. Let\'s lock in the Aug schedule this week.',time:'9:15 AM',mine:true,rxn:[{e:'✅',n:3}]},
+    {av:'LB',bg:'#EAF3DE',tc:'#27500A',name:'Lena Boateng',text:'Packing materials for Q3 are already ordered and arriving Jul 28.',time:'9:20 AM'},
+  ],
+  'g-ship':[
+    {sys:'Shipment Alerts — urgent updates only'},
+    {av:'LB',bg:'#EAF3DE',tc:'#27500A',name:'Lena Boateng',text:'ST-001 export documents are ready. Customs clearance booked for Jul 19.',time:'2:00 PM'},
+    {av:'SC',bg:'#2456A4',tc:'#fff',name:'Sarah Chen',text:'Great. Please share the customs reference number.',time:'2:05 PM',mine:true},
+    {av:'LB',bg:'#EAF3DE',tc:'#27500A',name:'Lena Boateng',text:'Ref: CUST-2025-7841. All good.',time:'2:08 PM'},
+  ],
+  'g-fab':[
+    {sys:'Fabric & Materials — arrivals and issues'},
+    {av:'AK',bg:'#E6F1FB',tc:'#0C447C',name:'Ama Kofi',text:'Navy Blue fabric for ST-001 arrived. Quality check passed.',time:'8:00 AM'},
+    {av:'JO',bg:'#FAECE7',tc:'#712B13',name:'James Obi',text:'Pink fabric for ST-002 is delayed — supplier says Jul 7 now.',time:'8:10 AM'},
+    {av:'SC',bg:'#2456A4',tc:'#fff',name:'Sarah Chen',text:'That\'s ok, ST-002 sewing starts Jul 10 anyway.',time:'8:15 AM',mine:true},
+  ],
+  'g-fab':[
+    {sys:'Fabric & Materials — arrivals and issues'},
+    {av:'AK',bg:'#E6F1FB',tc:'#0C447C',name:'Ama Kofi',text:'Navy Blue fabric for ST-001 arrived this morning — 850m, quality check passed ✅',time:'8:00 AM'},
+    {av:'JO',bg:'#FAECE7',tc:'#712B13',name:'James Obi',text:'Pink fabric for ST-002 is delayed by supplier — now arriving Jul 7 instead of Jul 4.',time:'8:12 AM'},
+    {av:'SC',bg:'#2456A4',tc:'#fff',name:'Sarah Chen',text:'That\'s manageable — sewing on ST-002 doesn\'t start until Jul 10 anyway.',time:'8:18 AM',mine:true},
+    {av:'AK',bg:'#E6F1FB',tc:'#0C447C',name:'Ama Kofi',text:'Black and Charcoal for ST-003 confirmed arriving Jul 5.',time:'8:26 AM',rxn:[{e:'👍',n:2}]},
+    {av:'JO',bg:'#FAECE7',tc:'#712B13',name:'James Obi',text:'Updated the material arrival log.',time:'8:32 AM'},
+  ],
+  'g-mgmt':[
+    {sys:'Management — leadership channel'},
+    {av:'SC',bg:'#2456A4',tc:'#fff',name:'Sarah Chen',text:'Monthly review: production tracking well. Sewing is slightly behind on ST-002 due to machine downtime but that\'s resolved now.',time:'9:00 AM',mine:true},
+    {av:'JO',bg:'#FAECE7',tc:'#712B13',name:'James Obi',text:'Agreed. Overall team performance is strong. I recommend a bonus recognition for the Sewing team if we hit the July targets.',time:'9:11 AM'},
+    {av:'SC',bg:'#2456A4',tc:'#fff',name:'Sarah Chen',text:'Fully support that. Let\'s revisit on July 31 once numbers are confirmed.',time:'9:15 AM',mine:true,rxn:[{e:'✅',n:1}]},
+  ],
+
+  'dm-rk':[
+    {av:'RK',bg:'#FAEEDA',tc:'#633806',name:'Raj Kumar',text:'Sarah, can we discuss the QC rejection rate for ST-001? It\'s higher than expected.',time:'11:00 AM'},
+    {av:'SC',bg:'#2456A4',tc:'#fff',name:'Sarah Chen',text:'Sure. What\'s the current rejection rate?',time:'11:05 AM',mine:true},
+    {av:'RK',bg:'#FAEEDA',tc:'#633806',name:'Raj Kumar',text:'About 2.5%. Mostly stitching on collars. I think we need to retrain 2 operators.',time:'11:08 AM'},
+    {av:'SC',bg:'#2456A4',tc:'#fff',name:'Sarah Chen',text:'Agreed. Let\'s schedule a training session for tomorrow morning before the shift starts.',time:'11:12 AM',mine:true},
+    {av:'RK',bg:'#FAEEDA',tc:'#633806',name:'Raj Kumar',text:'Perfect. I\'ll arrange it. Thanks!',time:'11:14 AM',rxn:[{e:'👍',n:1}]},
+  ],
+  'dm-jo':[
+    {av:'JO',bg:'#FAECE7',tc:'#712B13',name:'James Obi',text:'Sarah, we have a problem. The cutting machine broke down this morning.',time:'7:30 AM'},
+    {av:'SC',bg:'#2456A4',tc:'#fff',name:'Sarah Chen',text:'How bad? Which styles are affected?',time:'7:35 AM',mine:true},
+    {av:'JO',bg:'#FAECE7',tc:'#712B13',name:'James Obi',text:'ST-003 and ST-004. Repair team says 2 hours to fix.',time:'7:38 AM'},
+    {av:'SC',bg:'#2456A4',tc:'#fff',name:'Sarah Chen',text:'Ok, use the time to do manual finishing on ST-001. Don\'t let the team idle.',time:'7:40 AM',mine:true},
+    {av:'JO',bg:'#FAECE7',tc:'#712B13',name:'James Obi',text:'Smart. On it.',time:'7:42 AM'},
+    {av:'JO',bg:'#FAECE7',tc:'#712B13',name:'James Obi',text:'Machine is back. ST-003 cutting started.',time:'9:45 AM'},
+  ],
+  'dm-ak':[
+    {av:'AK',bg:'#E6F1FB',tc:'#0C447C',name:'Ama Kofi',text:'Good morning Sarah! ST-001 sewing is ahead of schedule. We should finish by Jul 14 instead of Jul 16.',time:'8:00 AM'},
+    {av:'SC',bg:'#2456A4',tc:'#fff',name:'Sarah Chen',text:'Excellent! That gives us more buffer for QC. Great work, Ama.',time:'8:05 AM',mine:true,rxn:[{e:'🎉',n:1}]},
+  ],
+  'hr':[
+    {sys:'HR department channel'},
+    {av:'KS',bg:'#E8F0FA',tc:'#1A4B7B',name:'Kwame Sarfo',text:'Leave applications for August have been submitted by 18 team members. Awaiting approval.',time:'10:00 AM'},
+    {av:'SC',bg:'#2456A4',tc:'#fff',name:'Sarah Chen',text:'Thanks Kwame. I\'ll review and approve by end of Friday. Flag any clashes.',time:'10:16 AM',mine:true},
+    {av:'KS',bg:'#E8F0FA',tc:'#1A4B7B',name:'Kwame Sarfo',text:'There are 2 clashes in Sewing during Aug 11 week — 2 operators requested the same dates.',time:'10:21 AM'},
+    {av:'SC',bg:'#2456A4',tc:'#fff',name:'Sarah Chen',text:'Please reach out individually and ask one to shift by a week. Standard policy applies.',time:'10:26 AM',mine:true,rxn:[{e:'✅',n:1}]},
+  ],
+  'accounts':[
+    {sys:'Accounts department channel'},
+    {av:'MB',bg:'#FAE8F5',tc:'#7B1A6A',name:'Mia Brown',text:'Invoice #INV-2025-341 from Texfab received — $12,400 for fabric batch 3. Payment due Jul 15.',time:'11:00 AM'},
+    {av:'SC',bg:'#2456A4',tc:'#fff',name:'Sarah Chen',text:'Process payment by Jul 12 to stay within terms. Mark as priority.',time:'11:11 AM',mine:true},
+    {av:'MB',bg:'#FAE8F5',tc:'#7B1A6A',name:'Mia Brown',text:'Done — payment scheduled for Jul 11. Confirmation will be sent to supplier.',time:'11:19 AM',rxn:[{e:'✅',n:1}]},
+    {av:'SC',bg:'#2456A4',tc:'#fff',name:'Sarah Chen',text:'Thank you. Can you send me the June expense summary as well?',time:'11:23 AM',mine:true},
+    {av:'MB',bg:'#FAE8F5',tc:'#7B1A6A',name:'Mia Brown',text:'Attaching it now.',time:'11:26 AM',att:{icon:'📄',name:'June 2025 Expenses.pdf',size:'218 KB'}},
+  ],
+  'dm-lb':[
+    {av:'LB',bg:'#EAF3DE',tc:'#27500A',name:'Lena Boateng',text:'The packing boxes for ST-001 have arrived. 500 units as requested.',time:'1:00 PM'},
+    {av:'SC',bg:'#2456A4',tc:'#fff',name:'Sarah Chen',text:'Perfect. Store them in bay 3 until QC clearance.',time:'1:05 PM',mine:true},
+  ],
+};
+
+// ── STYLES DATA ──
+const STYLES=[
+  {code:'ST-001',buyer:'Zara',fabric:'Jul 2',accessories:'Jul 5',shipDate:'Jul 18',month:0,week:0,
+   colours:[{name:'Navy Blue',qty:500,mode:'simple',sizes:[]},{name:'White',qty:400,mode:'simple',sizes:[]},{name:'Black',qty:300,mode:'simple',sizes:[]}],
+   monitor:{subId:'sewing',startDate:'Jul 8',finishDate:'Jul 16',dailyTarget:150},
+   prepStatus:'completed',prepDone:1200,
+   sewingStatus:'in-progress',sewingLog:[{day:1,qty:200},{day:2,qty:300},{day:3,qty:200},{day:4,qty:150},{day:5,qty:180}],
+   qcStatus:'not-started',qcLog:[],packingStatus:'not-started',packingLog:[]},
+  {code:'ST-002',buyer:'H&M',fabric:'Jul 4',accessories:'Jul 6',shipDate:'Jul 25',month:0,week:0,
+   colours:[{name:'White',qty:450,mode:'simple',sizes:[]},{name:'Pink',qty:350,mode:'simple',sizes:[]}],
+   monitor:{subId:'sewing',startDate:'Jul 10',finishDate:'Jul 20',dailyTarget:80},
+   prepStatus:'completed',prepDone:800,
+   sewingStatus:'in-progress',sewingLog:[{day:2,qty:200},{day:3,qty:200},{day:4,qty:120},{day:5,qty:80}],
+   qcStatus:'not-started',qcLog:[],packingStatus:'not-started',packingLog:[]},
+  {code:'ST-003',buyer:'Uniqlo',fabric:'Jul 10',accessories:'Jul 12',shipDate:'Aug 5',month:0,week:1,
+   colours:[{name:'Black',qty:1000,mode:'simple',sizes:[]},{name:'Charcoal',qty:1000,mode:'simple',sizes:[]}],
+   monitor:{subId:'sewing',startDate:'Jul 18',finishDate:'Aug 1',dailyTarget:140},
+   prepStatus:'in-progress',prepDone:600,
+   sewingStatus:'not-started',sewingLog:[],qcStatus:'not-started',qcLog:[],packingStatus:'not-started',packingLog:[]},
+  {code:'ST-004',buyer:'M&S',fabric:'Jul 15',accessories:'Jul 17',shipDate:'Aug 12',month:0,week:1,
+   colours:[{name:'Grey Melange',qty:600,mode:'simple',sizes:[]}],
+   monitor:{subId:'sewing',startDate:'Jul 22',finishDate:'Aug 8',dailyTarget:50},
+   prepStatus:'not-started',prepDone:0,
+   sewingStatus:'not-started',sewingLog:[],qcStatus:'not-started',qcLog:[],packingStatus:'not-started',packingLog:[]},
+];
+
+// ── HELPERS ──
+function tQty(s){return s.colours.reduce((a,c)=>a+c.qty,0);}
+function fmtD(d){return d?new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric'}):'-';}
+function gLog(sd){return sd.id+'Log';}
+function gDone(sd){return sd.id+'Done';}
+function gTotal(log){return(log||[]).reduce((a,b)=>a+b.qty,0);}
+function gDepDone(sd,s){
+  if(!sd.dependsOn)return tQty(s);
+  const dep=SUBS.find(x=>x.id===sd.dependsOn);if(!dep)return 0;
+  if(dep.type===2)return s.prepDone||0;
+  return gTotal(s[gLog(dep)]);
+}
+function getMonthDays(mi){
+  const m=MONTH_META[mi],r=[];
+  for(let d=1;d<=m.days;d++){const dow=new Date(m.year,m.month,d).getDay();r.push({day:d,dow,isSunday:dow===0,dayName:DAY_NAMES[dow]});}
+  return r;
+}
+function nowTime(){return new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true});}
+
+// ── TOAST ──
+function showToast(msg){
+  const ex=document.querySelector('.toast');if(ex)ex.remove();
+  clearTimeout(toastTimer);
+  const t=document.createElement('div');t.className='toast';t.textContent=msg;
+  document.body.appendChild(t);toastTimer=setTimeout(()=>t.remove(),2400);
+}
+// TOP-LEVEL DEPARTMENTS
+let DEPTS=[
+  {id:'operations',name:'Operations',icon:'OPS',color:'#1B3A6B',colorBg:'#EBF2FF',desc:'End-to-end garment production — planning, preparation, sewing, QC, and packing.',head:'James Obi',headAv:'JO',members:['JO','AK','RK','LB'],subDepts:true},
+  {id:'hr',name:'HR',icon:'HR',color:'#C94B2C',colorBg:'#FAECE7',desc:'Human resources — recruitment, leave management, payroll, and compliance.',head:'Kwame Sarfo',headAv:'KS',members:['KS'],subDepts:false},
+  {id:'accounts',name:'Accounts',icon:'ACC',color:'#534AB7',colorBg:'#EEF6FF',desc:'Finance, invoicing, payments, and expense tracking.',head:'Mia Brown',headAv:'MB',members:['MB'],subDepts:false},
+];
+
+function openOrgPage(){
+  currentView={type:'org'};
+  const top=document.getElementById('topbar');
+  top.querySelector('.tb-left').innerHTML=`<div class="tb-av" style="width:30px;height:30px;border-radius:7px;background:var(--brand);color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">AC</div><div class="tb-info"><div class="tb-name">Acme Corp</div><div class="tb-sub" id="tb-sub">Organisation overview &middot; ${DEPTS.length} departments</div></div>`;
+  document.getElementById('tb-right').innerHTML=`<button class="tbb prim" onclick="openAddDeptModal()">+ Add department</button>`;
+  document.getElementById('tabbar').classList.add('hidden');
+  document.querySelectorAll('.sbi,.subdept-row,.sdr,.ni').forEach(e=>e.classList.remove('active','on'));
+  const mc=document.getElementById('mc');
+  mc.style.background='var(--bg)';
+  renderOrgPage(mc);
+}
+
+function renderOrgPage(mc){
+  mc.style.overflowY='auto';
+  const totalMembers=new Set(DEPTS.flatMap(d=>d.members).concat(['SC'])).size;
+  mc.innerHTML=`<div style="width:100%;padding:16px 18px;display:flex;flex-direction:column;gap:14px;box-sizing:border-box;">
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:13px 16px;display:flex;align-items:center;gap:12px;">
+        <div style="width:40px;height:40px;border-radius:10px;background:var(--bl);display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0;">&#127970;</div>
+        <div><div style="font-size:22px;font-weight:700;color:var(--text);">${DEPTS.length}</div><div style="font-size:11px;color:var(--text-3);margin-top:1px;">Departments</div></div>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:13px 16px;display:flex;align-items:center;gap:12px;">
+        <div style="width:40px;height:40px;border-radius:10px;background:#EEF6FF;display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0;">&#128100;</div>
+        <div><div style="font-size:22px;font-weight:700;color:var(--text);">${totalMembers}</div><div style="font-size:11px;color:var(--text-3);margin-top:1px;">Team members</div></div>
+      </div>
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:13px 16px;display:flex;align-items:center;gap:12px;">
+        <div style="width:40px;height:40px;border-radius:10px;background:#FAEEDA;display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0;">&#9881;&#65039;</div>
+        <div><div style="font-size:22px;font-weight:700;color:var(--text);">${SUBS.length}</div><div style="font-size:11px;color:var(--text-3);margin-top:1px;">Sub-departments</div></div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;">${DEPTS.map(d=>buildDeptCard(d)).join('')}</div>
+    <div onclick="openAddDeptModal()" style="border:2px dashed var(--border);border-radius:11px;padding:18px;display:flex;align-items:center;justify-content:center;gap:10px;cursor:pointer;color:var(--text-3);transition:all .15s;" onmouseenter="this.style.borderColor='var(--brand)';this.style.color='var(--brand)';this.style.background='var(--bl)'" onmouseleave="this.style.borderColor='var(--border)';this.style.color='var(--text-3)';this.style.background=''">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+      <span style="font-size:14px;font-weight:500;">Add department</span>
+    </div>
+  </div>`;
+}
+
+function buildDeptCard(d){
+  const avatars=d.members.map(av=>{const p=ALL_PPL[av]||{name:av,bg:'#ccc',tc:'#fff'};return`<div title="${p.name}" style="width:26px;height:26px;border-radius:50%;background:${p.bg};color:${p.tc};display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;border:2px solid var(--surface);margin-left:-6px;flex-shrink:0;">${av}</div>`;}).join('');
+  const subs=d.id==='operations'?SUBS:[];
+  const subBlock=subs.length?`<div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);">
+    <div style="font-size:10px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">Sub-departments (${subs.length})</div>
+    <div style="display:flex;flex-wrap:wrap;gap:6px;">
+      ${subs.map(s=>`<div onclick="openSub('${s.id}')" style="display:inline-flex;align-items:center;gap:6px;padding:5px 11px;background:var(--bg);border:1px solid var(--border);border-radius:20px;cursor:pointer;transition:all .15s;" onmouseenter="this.style.borderColor='${s.color}';this.style.background='${s.color}22'" onmouseleave="this.style.borderColor='var(--border)';this.style.background='var(--bg)'">
+        <span style="width:6px;height:6px;border-radius:50%;background:${s.color};display:inline-block;flex-shrink:0;"></span>
+        <span style="font-size:12px;font-weight:500;color:var(--text);">${s.name}</span>
+        <span style="font-size:10px;padding:1px 5px;border-radius:3px;font-weight:600;background:${s.type===1?'rgba(13,160,100,.18)':s.type===2?'rgba(90,78,190,.18)':'rgba(180,120,20,.18)'};color:${s.type===1?'#1B3A6B':s.type===2?'#534AB7':'#B87316'};">T${s.type}</span>
+      </div>`).join('')}
+      <div onclick="openModal('addSubdept')" style="display:inline-flex;align-items:center;gap:5px;padding:5px 11px;border:1px dashed var(--border);border-radius:20px;cursor:pointer;color:var(--text-3);font-size:12px;transition:all .15s;" onmouseenter="this.style.borderColor='var(--brand)';this.style.color='var(--brand)'" onmouseleave="this.style.borderColor='var(--border)';this.style.color='var(--text-3)'">+ Add sub-dept</div>
+    </div>
+  </div>`:'';
+  return`<div style="background:var(--surface);border:1px solid var(--border);border-radius:11px;overflow:hidden;box-shadow:var(--shadow);">
+    <div style="padding:14px 16px;display:flex;align-items:flex-start;gap:13px;">
+      <div style="width:48px;height:48px;border-radius:11px;background:${d.colorBg};display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:${d.color};flex-shrink:0;letter-spacing:-.3px;">${d.icon}</div>
+      <div style="flex:1;min-width:0;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap;">
+          <span style="font-size:15px;font-weight:700;color:var(--text);">${d.name}</span>
+          ${d.subDepts?`<span style="font-size:10px;padding:2px 7px;background:var(--bl);color:var(--brand);border-radius:4px;font-weight:600;">Has sub-depts</span>`:''}
+          ${d.head?`<span style="font-size:11px;color:var(--text-3);">Head: <strong style="color:var(--text-2);">${d.head}</strong></span>`:''}
+        </div>
+        <p style="font-size:12px;color:var(--text-3);line-height:1.55;margin-bottom:10px;">${d.desc}</p>
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div style="display:flex;align-items:center;margin-left:6px;">
+              ${avatars}
+              <div onclick="openAddMemberDept('${d.id}')" title="Add member" style="width:26px;height:26px;border-radius:50%;background:var(--bg);border:2px dashed var(--border);display:flex;align-items:center;justify-content:center;margin-left:-6px;cursor:pointer;transition:all .15s;" onmouseenter="this.style.borderColor='var(--brand)'" onmouseleave="this.style.borderColor='var(--border)'">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--text-3)" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              </div>
+            </div>
+            <span style="font-size:11px;color:var(--text-3);">${d.members.length+1} member${d.members.length!==0?'s':''} (incl. admin)</span>
+          </div>
+          <div style="display:flex;gap:6px;">
+            <button class="tbb" style="font-size:12px;padding:5px 12px;" onclick="openDept('${d.id}')">Open channel</button>
+            <button class="tbb" style="font-size:12px;padding:5px 12px;" onclick="openEditDept('${d.id}')">Edit</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    ${subBlock}
+  </div>`;
+}
+
+function openAddDeptModal(){
+  const COLS=['#1B3A6B','#C94B2C','#534AB7','#B87316','#1558A0','#D4537E','#087A6B','#7C3AED'];
+  selColor=COLS[0];
+  const sw=COLS.map(c=>`<div style="width:22px;height:22px;border-radius:50%;background:${c};cursor:pointer;border:2.5px solid transparent;transition:all .18s;flex-shrink:0;" onclick="pickColor('${c}',this)"></div>`).join('');
+  showModalHTML(`<h3 style="margin-bottom:4px;">Add department</h3>
+    <p style="font-size:12px;color:var(--text-3);margin-bottom:14px;">Departments are top-level divisions of your organisation. Each gets its own channel.</p>
+    <label>Department name *</label><input id="nd-name" placeholder="e.g. Quality Assurance"/>
+    <label>Description</label><textarea id="nd-desc" placeholder="What does this department do?" style="resize:none;height:60px;width:100%;padding:8px 11px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;color:var(--text);outline:none;margin-bottom:12px;"></textarea>
+    <label>Department head</label><input id="nd-head" placeholder="e.g. John Smith"/>
+    <label>Colour</label><div style="display:flex;gap:7px;margin-bottom:14px;flex-wrap:wrap;">${sw}</div>
+    <div class="modal-btns"><button class="mbb" onclick="closeModal()">Cancel</button><button class="mbb prim" onclick="doCreateDept()">Create department</button></div>`);
+}
+
+function doCreateDept(){
+  const name=document.getElementById('nd-name')?.value.trim();
+  if(!name){showToast('Please enter a department name');return;}
+  const desc=document.getElementById('nd-desc')?.value.trim()||'';
+  const head=document.getElementById('nd-head')?.value.trim()||'';
+  const id='dept_'+Date.now();
+  const abbr=name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,3);
+  DEPTS.push({id,name,icon:abbr,color:selColor,colorBg:selColor+'22',desc,head,headAv:'',members:[],subDepts:false});
+  if(!MSGS[id])MSGS[id]=[];
+  closeModal();renderSidebar();renderOrgPage(document.getElementById('mc'));
+  document.getElementById('tb-sub').textContent='Organisation overview \u00b7 '+DEPTS.length+' departments';
+  showToast(name+' created');
+}
+
+function openEditDept(id){
+  const d=DEPTS.find(x=>x.id===id);if(!d)return;
+  showModalHTML(`<h3 style="margin-bottom:4px;">Edit ${d.name}</h3>
+    <label>Department name</label><input id="ed-name" value="${d.name}"/>
+    <label>Description</label><textarea id="ed-desc" style="resize:none;height:60px;width:100%;padding:8px 11px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;color:var(--text);outline:none;margin-bottom:12px;">${d.desc}</textarea>
+    <label>Department head</label><input id="ed-head" value="${d.head||''}"/>
+    <div class="modal-btns">
+      <button class="mbb" style="color:var(--error);border-color:var(--error);" onclick="doDeleteDept('${id}')">Delete</button>
+      <button class="mbb" onclick="closeModal()">Cancel</button>
+      <button class="mbb prim" onclick="doSaveDept('${id}')">Save changes</button>
+    </div>`);
+}
+
+function doSaveDept(id){
+  const d=DEPTS.find(x=>x.id===id);if(!d)return;
+  d.name=document.getElementById('ed-name')?.value.trim()||d.name;
+  d.desc=document.getElementById('ed-desc')?.value.trim()||d.desc;
+  d.head=document.getElementById('ed-head')?.value.trim()||d.head;
+  const abbr=d.name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,3);
+  if(!['OPS','HR','ACC'].includes(d.icon))d.icon=abbr;
+  closeModal();renderSidebar();renderOrgPage(document.getElementById('mc'));showToast(d.name+' updated');
+}
+
+function doDeleteDept(id){
+  const d=DEPTS.find(x=>x.id===id);if(!d)return;
+  if(['operations','hr','accounts'].includes(id)){showToast('Cannot delete built-in departments');return;}
+  DEPTS.splice(DEPTS.findIndex(x=>x.id===id),1);
+  closeModal();renderSidebar();renderOrgPage(document.getElementById('mc'));
+  document.getElementById('tb-sub').textContent='Organisation overview \u00b7 '+DEPTS.length+' departments';
+  showToast(d.name+' removed');
+}
+
+function openAddMemberDept(deptId){
+  const d=DEPTS.find(x=>x.id===deptId);if(!d)return;
+  const avail=Object.entries(ALL_PPL).filter(([k])=>k!=='SC'&&!d.members.includes(k));
+  showModalHTML(`<h3 style="margin-bottom:10px;">Add member to ${d.name}</h3>
+    <div style="display:flex;flex-direction:column;gap:6px;">
+      ${avail.map(([av,p])=>`<div class="pp-item" onclick="doAddMemberDept('${deptId}','${av}')">
+        <div style="width:30px;height:30px;border-radius:50%;background:${p.bg};color:${p.tc};display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0;">${av}</div>
+        <div><div style="font-size:13px;font-weight:600;color:var(--text);">${p.name}</div><div style="font-size:11px;color:var(--text-3);">${p.role}</div></div>
+        <span style="font-size:11px;color:var(--brand);font-weight:500;">Add +</span>
+      </div>`).join('')}
+      ${avail.length===0?'<p style="font-size:13px;color:var(--text-3);text-align:center;padding:12px;">All members are already in this department.</p>':''}
+    </div>
+    <div class="m-btns" style="margin-top:10px;"><button class="mb prim" onclick="closeModal()">Done</button></div>`);
+}
+
+function doAddMemberDept(deptId,av){
+  const d=DEPTS.find(x=>x.id===deptId);if(!d||d.members.includes(av))return;
+  d.members.push(av);
+  const p=ALL_PPL[av];
+  showToast((p?p.name:av)+' added to '+d.name);
+  closeModal();renderOrgPage(document.getElementById('mc'));
+}
+
+// ── ALL MESSAGES INBOX ──
+function openInbox(){
+  currentView={type:'inbox'};
+  const top=document.getElementById('topbar');
+  top.querySelector('.tb-left').innerHTML=`
+    <div class="tb-av hash" style="font-size:16px;">💬</div>
+    <div class="tb-info"><div class="tb-name">All messages</div><div class="tb-sub">Every channel, group, and direct message</div></div>`;
+  document.getElementById('tb-right').innerHTML='';
+  document.getElementById('tabbar').classList.add('hidden');
+  document.querySelectorAll('.sbi,.subdept-row,.sdr,.ni').forEach(e=>e.classList.remove('active','on'));
+  document.getElementById('rib-inbox')?.classList.add('on');
+  const mc=document.getElementById('mc');
+  mc.style.background='var(--bg)';
+  renderInbox(mc);
+}
+
+function renderInbox(mc){
+  mc.style.overflowY='auto';
+
+  // Build a unified list of all channels with their last message + unread count
+  const channels=[];
+
+  // Sub-departments
+  SUBS.forEach(sd=>{
+    const msgs=(MSGS[sd.id]||[]).filter(m=>!m.sys);
+    const last=msgs[msgs.length-1]||null;
+    channels.push({
+      type:'subdept',id:sd.id,
+      name:sd.name,
+      subtitle:`Type ${sd.type} · Operations`,
+      icon:null,dotColor:sd.color,
+      unread:sd.unread||0,
+      lastMsg:last,
+      lastTime:last?.time||null,
+      onClick:`openSub('${sd.id}')`,
+    });
+  });
+
+  // Departments (HR, Accounts + dynamic)
+  DEPTS.forEach(d=>{
+    const msgs=(MSGS[d.id]||[]).filter(m=>!m.sys);
+    const last=msgs[msgs.length-1]||null;
+    channels.push({
+      type:'dept',id:d.id,
+      name:d.name,
+      subtitle:'Department channel',
+      icon:d.icon,dotColor:d.color,
+      unread:0,
+      lastMsg:last,
+      lastTime:last?.time||null,
+      onClick:`openDept('${d.id}')`,
+    });
+  });
+
+  // Groups
+  GROUPS.forEach(g=>{
+    const msgs=(MSGS[g.id]||[]).filter(m=>!m.sys);
+    const last=msgs[msgs.length-1]||null;
+    channels.push({
+      type:'group',id:g.id,
+      name:g.name,
+      subtitle:`${g.members.length} members`,
+      emoji:g.emoji,bgColor:g.color,tcColor:g.tc,
+      unread:g.unread||0,
+      lastMsg:last,
+      lastTime:last?.time||null,
+      onClick:`openGroup('${g.id}')`,
+    });
+  });
+
+  // DMs
+  DMS.forEach(dm=>{
+    const msgs=(MSGS[dm.id]||[]).filter(m=>!m.sys);
+    const last=msgs[msgs.length-1]||null;
+    channels.push({
+      type:'dm',id:dm.id,
+      name:dm.name,
+      subtitle:dm.role,
+      av:dm.av,bg:dm.bg,tc:dm.tc,online:dm.online,
+      unread:dm.unread||0,
+      lastMsg:last,
+      lastTime:last?.time||null,
+      onClick:`openDM('${dm.id}')`,
+    });
+  });
+
+  // Sort: unread first, then by most recent (those with messages first)
+  channels.sort((a,b)=>{
+    if(b.unread!==a.unread)return b.unread-a.unread;
+    // channels with messages above empty ones
+    if(!!b.lastMsg!==!!a.lastMsg)return b.lastMsg?1:-1;
+    return 0;
+  });
+
+  const totalUnread=channels.reduce((s,c)=>s+c.unread,0);
+
+  function buildAvatar(ch){
+    if(ch.type==='group'){
+      return`<div style="width:42px;height:42px;border-radius:10px;background:${ch.bgColor||'#EBF2FF'};display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;">${ch.emoji}</div>`;
+    }
+    if(ch.type==='dm'){
+      return`<div style="position:relative;flex-shrink:0;">
+        <div style="width:42px;height:42px;border-radius:50%;background:${ch.bg};color:${ch.tc};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;">${ch.av}</div>
+        ${ch.online?`<span style="position:absolute;bottom:1px;right:1px;width:10px;height:10px;border-radius:50%;background:#3B7DD8;border:2px solid var(--bg);"></span>`:''}
+      </div>`;
+    }
+    if(ch.type==='dept'){
+      return`<div style="width:42px;height:42px;border-radius:10px;background:${ch.dotColor}22;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:${ch.dotColor};flex-shrink:0;letter-spacing:-.3px;">${ch.icon}</div>`;
+    }
+    // subdept
+    return`<div style="width:42px;height:42px;border-radius:10px;background:${ch.dotColor}22;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+      <span style="width:10px;height:10px;border-radius:50%;background:${ch.dotColor};display:block;"></span>
+    </div>`;
+  }
+
+  function buildPreview(ch){
+    if(!ch.lastMsg)return`<span style="color:var(--text-3);font-style:italic;">No messages yet</span>`;
+    const who=ch.lastMsg.mine?'You':ch.lastMsg.name?.split(' ')[0]||'';
+    const txt=ch.lastMsg.att?`${ch.lastMsg.text} 📎`:ch.lastMsg.text||'';
+    const preview=(who?who+': ':'')+txt;
+    return`<span style="color:${ch.unread>0?'var(--text-2)':'var(--text-3)'};font-weight:${ch.unread>0?'500':'400'};">${preview.length>55?preview.slice(0,55)+'…':preview}</span>`;
+  }
+
+  const sections=[
+    {label:'Unread',items:channels.filter(c=>c.unread>0)},
+    {label:'All channels',items:channels.filter(c=>c.unread===0)},
+  ].filter(s=>s.items.length>0);
+
+  mc.innerHTML=`<div style="width:100%;display:flex;flex-direction:column;box-sizing:border-box;">
+
+    <!-- Header bar -->
+    <div style="padding:14px 18px 10px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;flex-shrink:0;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <span style="font-size:14px;font-weight:700;color:var(--text);">All messages</span>
+        ${totalUnread>0?`<span style="font-size:11px;padding:2px 9px;background:#C94B2C;color:#fff;border-radius:20px;font-weight:700;">${totalUnread} unread</span>`:'<span style="font-size:11px;color:var(--text-3);">All caught up</span>'}
+      </div>
+      <div style="display:flex;gap:6px;">
+        <input id="inbox-search" placeholder="🔍 Filter channels…" oninput="filterInbox(this.value)" style="padding:6px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;color:var(--text);outline:none;background:var(--bg);width:200px;" onfocus="this.style.borderColor='var(--brand)'" onblur="this.style.borderColor='var(--border)'"/>
+      </div>
+    </div>
+
+    <!-- Channel list -->
+    <div id="inbox-list" style="flex:1;display:flex;flex-direction:column;">
+      ${sections.map(sec=>`
+        <div style="padding:10px 18px 4px;font-size:10px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.08em;">${sec.label}</div>
+        ${sec.items.map(ch=>`
+          <div onclick="${ch.onClick}" data-name="${ch.name.toLowerCase()}" style="display:flex;align-items:center;gap:13px;padding:11px 18px;cursor:pointer;border-bottom:1px solid var(--border);transition:background .12s;" onmouseenter="this.style.background='var(--bl)'" onmouseleave="this.style.background=''">
+            ${buildAvatar(ch)}
+            <div style="flex:1;min-width:0;">
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:3px;">
+                <span style="font-size:13px;font-weight:${ch.unread>0?'700':'500'};color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${ch.name}</span>
+                <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
+                  ${ch.lastTime?`<span style="font-size:11px;color:var(--text-3);">${ch.lastTime}</span>`:''}
+                  ${ch.unread>0?`<span style="font-size:10px;padding:2px 7px;background:#C94B2C;color:#fff;border-radius:20px;font-weight:700;min-width:20px;text-align:center;">${ch.unread}</span>`:''}
+                </div>
+              </div>
+              <div style="font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${buildPreview(ch)}</div>
+              <div style="font-size:11px;color:var(--text-3);margin-top:2px;">${ch.subtitle}</div>
+            </div>
+          </div>`).join('')}
+      `).join('')}
+    </div>
+  </div>`;
+}
+
+function filterInbox(v){
+  const lv=v.toLowerCase().trim();
+  document.querySelectorAll('#inbox-list [data-name]').forEach(row=>{
+    row.style.display=(!lv||row.dataset.name.includes(lv))?'':'none';
+  });
+  // hide section headers if all their items are hidden — simple approach: always show them
+}
+
+function openDashboard(){
+  showModalHTML('<h3 style="margin-bottom:12px;">📊 Dashboard</h3><div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;"><div style="background:var(--bl);border:1px solid var(--bb);border-radius:9px;padding:12px;text-align:center;"><div style="font-size:22px;font-weight:700;color:var(--brand);">4</div><div style="font-size:11px;color:var(--t3);margin-top:2px;">Active styles</div></div><div style="background:#FEF0E6;border:1px solid #F5C89A;border-radius:9px;padding:12px;text-align:center;"><div style="font-size:22px;font-weight:700;color:#B87316;">1,230</div><div style="font-size:11px;color:var(--t3);margin-top:2px;">Pcs sewn today</div></div><div style="background:#EBF2FF;border:1px solid #A8C3E8;border-radius:9px;padding:12px;text-align:center;"><div style="font-size:22px;font-weight:700;color:#1558A0;">83</div><div style="font-size:11px;color:var(--t3);margin-top:2px;">QC passed today</div></div><div style="background:#F4F0FF;border:1px solid #C4B5FD;border-radius:9px;padding:12px;text-align:center;"><div style="font-size:22px;font-weight:700;color:#4A1D96;">Jul 18</div><div style="font-size:11px;color:var(--t3);margin-top:2px;">Next shipment</div></div></div><p style="font-size:12px;color:var(--t3);text-align:center;margin-bottom:14px;">Full dashboard coming soon.</p><div class="m-btns"><button class="mb prim" onclick="closeModal()">Close</button></div>');
+}
+
+function openSettings(){
+  currentView={type:'settings'};
+  const top=document.getElementById('topbar');
+  top.querySelector('.tb-left').innerHTML=`<div class="tb-icon hash" style="font-size:17px;">&#9881;&#65039;</div><div class="tb-info"><div class="tb-name">Settings</div><div class="tb-sub">Organisation &amp; workspace preferences</div></div>`;
+  document.getElementById('tb-right').innerHTML='';
+  document.getElementById('tabbar').classList.add('hidden');
+  document.querySelectorAll('.sbi,.subdept-row,.sdr,.ni').forEach(e=>e.classList.remove('active','on'));
+  const mc=document.getElementById('mc');
+  mc.style.background='var(--bg)';
+  renderSettingsPage(mc);
+}
+
+function renderSettingsPage(mc){
+  mc.style.overflowY='auto';
+  mc.innerHTML=`<div style="width:100%;max-width:700px;padding:20px 24px;display:flex;flex-direction:column;gap:18px;box-sizing:border-box;">
+
+    <!-- Organisation section -->
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;box-shadow:var(--shadow);">
+      <div style="padding:14px 18px;border-bottom:1px solid var(--border);background:#F8FAFF;">
+        <div style="font-size:13px;font-weight:700;color:var(--text);">Organisation</div>
+        <div style="font-size:11px;color:var(--text-3);margin-top:1px;">Workspace identity and branding</div>
+      </div>
+      <div style="padding:18px;">
+        <!-- Org avatar upload -->
+        <div style="display:flex;align-items:center;gap:18px;margin-bottom:20px;padding:14px 16px;background:var(--bg);border-radius:10px;border:1px solid var(--border);">
+          <div style="position:relative;flex-shrink:0;">
+            <div id="org-av-display" style="width:72px;height:72px;border-radius:14px;background:var(--brand);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;color:#fff;overflow:hidden;letter-spacing:-.5px;">${ORG_STATE.orgAvatar?`<img src="${ORG_STATE.orgAvatar}" style="width:100%;height:100%;object-fit:cover;"/>`:ORG_STATE.orgInitials}</div>
+            <div onclick="document.getElementById('org-pic-input').click()" style="position:absolute;bottom:-4px;right:-4px;width:22px;height:22px;border-radius:50%;background:var(--brand);border:2px solid var(--surface);display:flex;align-items:center;justify-content:center;cursor:pointer;" title="Change logo">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            </div>
+            <input type="file" id="org-pic-input" accept="image/*" style="display:none;" onchange="handleOrgPicUpload(this)"/>
+          </div>
+          <div style="flex:1;">
+            <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:2px;">${ORG_STATE.orgName}</div>
+            <div style="font-size:12px;color:var(--text-3);margin-bottom:8px;">${DEPTS.length} departments · ${new Set(DEPTS.flatMap(d=>d.members).concat(['SC'])).size} members</div>
+            <button onclick="document.getElementById('org-pic-input').click()" style="padding:5px 12px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:inherit;color:var(--text-2);background:var(--surface);cursor:pointer;">Upload logo</button>
+            ${ORG_STATE.orgAvatar?`<button onclick="removeOrgPic()" style="padding:5px 12px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:inherit;color:var(--error);background:var(--surface);cursor:pointer;margin-left:6px;">Remove</button>`:''}
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
+          <div>
+            <div style="font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px;">Organisation name</div>
+            <input id="set-orgname" value="${ORG_STATE.orgName}" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-size:13px;font-family:inherit;color:var(--text);outline:none;" onfocus="this.style.borderColor='var(--brand)'" onblur="this.style.borderColor='var(--border)'"/>
+          </div>
+          <div>
+            <div style="font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px;">Industry</div>
+            <select id="set-industry" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-size:13px;font-family:inherit;color:var(--text);outline:none;">
+              <option ${ORG_STATE.industry==='Apparel'?'selected':''}>Apparel</option>
+              <option ${ORG_STATE.industry==='Manufacturing'?'selected':''}>Manufacturing</option>
+              <option ${ORG_STATE.industry==='Retail'?'selected':''}>Retail</option>
+              <option ${ORG_STATE.industry==='Logistics'?'selected':''}>Logistics</option>
+              <option ${ORG_STATE.industry==='Other'?'selected':''}>Other</option>
+            </select>
+          </div>
+          <div>
+            <div style="font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px;">Timezone</div>
+            <select id="set-tz" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-size:13px;font-family:inherit;color:var(--text);outline:none;">
+              ${['UTC-5 (New York)','UTC+0 (London)','UTC+1 (Paris)','UTC+3 (Nairobi)','UTC+5:30 (Mumbai)','UTC+8 (Singapore)','UTC+9 (Tokyo)'].map(t=>`<option ${ORG_STATE.timezone===t?'selected':''}>${t}</option>`).join('')}
+            </select>
+          </div>
+          <div>
+            <div style="font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px;">Date format</div>
+            <select id="set-datefmt" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-size:13px;font-family:inherit;color:var(--text);outline:none;">
+              ${['MMM D, YYYY','DD/MM/YYYY','MM/DD/YYYY','YYYY-MM-DD'].map(t=>`<option ${ORG_STATE.dateFmt===t?'selected':''}>${t}</option>`).join('')}
+            </select>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:flex-end;">
+          <button onclick="saveOrgSettings()" style="padding:7px 18px;background:var(--brand);color:#fff;border:none;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;">Save organisation</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Notifications section -->
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;box-shadow:var(--shadow);">
+      <div style="padding:14px 18px;border-bottom:1px solid var(--border);background:#F8FAFF;">
+        <div style="font-size:13px;font-weight:700;color:var(--text);">Notifications</div>
+        <div style="font-size:11px;color:var(--text-3);margin-top:1px;">Choose what you want to be notified about</div>
+      </div>
+      <div style="padding:16px 18px;display:flex;flex-direction:column;gap:2px;">
+        ${[
+          {id:'notif-msg',label:'New messages in my channels',sub:'Direct messages and group mentions',on:true},
+          {id:'notif-prod',label:'Daily production summary',sub:'End of day output report across all T3 depts',on:true},
+          {id:'notif-ship',label:'Shipment alerts',sub:'Customs, dispatch, and delivery updates',on:true},
+          {id:'notif-qc',label:'QC rejection flags',sub:'When rejection rate exceeds threshold',on:false},
+          {id:'notif-style',label:'Style status changes',sub:'When prep or sewing status updates',on:true},
+          {id:'notif-report',label:'Weekly production report',sub:'Every Monday at 8am',on:false},
+        ].map(n=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);">
+          <div><div style="font-size:13px;font-weight:500;color:var(--text);">${n.label}</div><div style="font-size:11px;color:var(--text-3);margin-top:1px;">${n.sub}</div></div>
+          <div onclick="this.dataset.on=this.dataset.on==='1'?'0':'1';this.style.background=this.dataset.on==='1'?'var(--brand)':'#E0E0E0';this.querySelector('div').style.left=this.dataset.on==='1'?'18px':'2px';" data-on="${n.on?'1':'0'}" style="width:36px;height:20px;border-radius:20px;background:${n.on?'var(--brand)':'#E0E0E0'};position:relative;cursor:pointer;transition:background .2s;flex-shrink:0;">
+            <div style="position:absolute;top:2px;left:${n.on?'18':'2'}px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.2);transition:left .2s;"></div>
+          </div>
+        </div>`).join('')}
+        <div style="display:flex;justify-content:flex-end;margin-top:12px;">
+          <button onclick="showToast('Notification preferences saved')" style="padding:7px 18px;background:var(--brand);color:#fff;border:none;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;">Save preferences</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Appearance section -->
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;box-shadow:var(--shadow);">
+      <div style="padding:14px 18px;border-bottom:1px solid var(--border);background:#F8FAFF;">
+        <div style="font-size:13px;font-weight:700;color:var(--text);">Appearance</div>
+        <div style="font-size:11px;color:var(--text-3);margin-top:1px;">Customise how Zerem looks for you</div>
+      </div>
+      <div style="padding:16px 18px;">
+        <div style="font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;">Theme</div>
+        <div style="display:flex;gap:10px;margin-bottom:16px;">
+          ${[{id:'light',label:'Light',bg:'#F4F7FF',side:'#0D1B3E',active:true},{id:'dark',label:'Dark',bg:'#1A2A22',side:'#091529',active:false},{id:'system',label:'System',bg:'linear-gradient(135deg,#F4F7FF 50%,#1A2A22 50%)',side:'#0D1B3E',active:false}].map(t=>`
+          <div onclick="showToast('${t.label} theme — coming soon')" style="cursor:pointer;border:2px solid ${t.active?'var(--brand)':'var(--border)'};border-radius:8px;overflow:hidden;width:80px;">
+            <div style="height:40px;background:${t.bg};position:relative;"><div style="position:absolute;left:0;top:0;bottom:0;width:20px;background:${t.side};opacity:.7;"></div></div>
+            <div style="padding:4px;text-align:center;font-size:11px;font-weight:${t.active?'600':'400'};color:${t.active?'var(--brand)':'var(--text-3)'};">${t.label}</div>
+          </div>`).join('')}
+        </div>
+        <div style="font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">Accent colour</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">
+          ${['#1B3A6B','#1558A0','#7C3AED','#C94B2C','#B87316','#D4537E'].map((c,i)=>`<div onclick="showToast('Accent colour — coming soon')" style="width:26px;height:26px;border-radius:50%;background:${c};cursor:pointer;border:${i===0?'3px solid var(--text)':'3px solid transparent'};transition:all .2s;"></div>`).join('')}
+        </div>
+        <div style="font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">Font size</div>
+        <div style="display:flex;gap:8px;">
+          ${['Small','Default','Large'].map((s,i)=>`<div onclick="showToast('Font size — coming soon')" style="padding:5px 14px;border:1.5px solid ${i===1?'var(--brand)':'var(--border)'};border-radius:6px;font-size:${10+i*2}px;cursor:pointer;color:${i===1?'var(--brand)':'var(--text-2)'};">${s}</div>`).join('')}
+        </div>
+      </div>
+    </div>
+
+    <!-- Data & Privacy section -->
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;box-shadow:var(--shadow);">
+      <div style="padding:14px 18px;border-bottom:1px solid var(--border);background:#F8FAFF;">
+        <div style="font-size:13px;font-weight:700;color:var(--text);">Data & Privacy</div>
+      </div>
+      <div style="padding:16px 18px;display:flex;flex-direction:column;gap:12px;">
+        ${[{label:'Export all data',sub:'Download a full export of your workspace data as JSON',btn:'Export',action:"showToast('Export started — check your email')"},
+           {label:'Message retention',sub:'Automatically delete messages older than 12 months',btn:'Configure',action:"showToast('Message retention — coming soon')"},
+           {label:'Two-factor authentication',sub:'Add an extra layer of security to your account',btn:'Enable 2FA',action:"showToast('2FA — coming soon')"}
+        ].map(r=>`<div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+          <div><div style="font-size:13px;font-weight:500;color:var(--text);">${r.label}</div><div style="font-size:11px;color:var(--text-3);margin-top:1px;">${r.sub}</div></div>
+          <button onclick="${r.action}" style="padding:5px 13px;border:1.5px solid var(--border);border-radius:6px;font-size:12px;font-family:inherit;color:var(--text-2);background:var(--surface);cursor:pointer;white-space:nowrap;">${r.btn}</button>
+        </div>`).join('')}
+      </div>
+    </div>
+
+  </div>`;
+}
+
+function navReportsRail(){openReports();}
+
+function openProfile(){
+  currentView={type:'profile'};
+  const top=document.getElementById('topbar');
+  top.querySelector('.tb-left').innerHTML=`<div class="tb-av" style="width:30px;height:30px;border-radius:50%;background:var(--brand);color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${ORG_STATE.userInitials}</div><div class="tb-info"><div class="tb-name">My Profile</div><div class="tb-sub">Personal settings and preferences</div></div>`;
+  document.getElementById('tb-right').innerHTML='';
+  document.getElementById('tabbar').classList.add('hidden');
+  document.querySelectorAll('.sbi,.subdept-row,.sdr,.ni').forEach(e=>e.classList.remove('active','on'));
+  const mc=document.getElementById('mc');
+  mc.style.background='var(--bg)';
+  renderProfilePage(mc);
+}
+
+function renderProfilePage(mc){
+  mc.style.overflowY='auto';
+  mc.innerHTML=`<div style="width:100%;max-width:700px;padding:20px 24px;display:flex;flex-direction:column;gap:18px;box-sizing:border-box;">
+
+    <!-- Avatar & identity -->
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;box-shadow:var(--shadow);">
+      <div style="padding:14px 18px;border-bottom:1px solid var(--border);background:#F8FAFF;">
+        <div style="font-size:13px;font-weight:700;color:var(--text);">Profile photo</div>
+        <div style="font-size:11px;color:var(--text-3);margin-top:1px;">Your photo is visible to all members of Acme Corp</div>
+      </div>
+      <div style="padding:20px 18px;display:flex;align-items:center;gap:22px;">
+        <div style="position:relative;flex-shrink:0;">
+          <div id="user-av-display" style="width:88px;height:88px;border-radius:50%;background:var(--brand);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;color:#fff;overflow:hidden;flex-shrink:0;">
+            ${ORG_STATE.userAvatar?`<img src="${ORG_STATE.userAvatar}" style="display:block;width:88px;height:88px;object-fit:cover;border-radius:50%;"/>`:`<span style="letter-spacing:-1px;">${ORG_STATE.userInitials}</span>`}
+          </div>
+          <div onclick="document.getElementById('user-pic-input').click()" style="position:absolute;bottom:0;right:0;width:26px;height:26px;border-radius:50%;background:var(--brand);border:3px solid var(--surface);display:flex;align-items:center;justify-content:center;cursor:pointer;" title="Change photo">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          </div>
+          <input type="file" id="user-pic-input" accept="image/*" style="display:none;" onchange="handleUserPicUpload(this)"/>
+        </div>
+        <div>
+          <div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:3px;">${ORG_STATE.userName}</div>
+          <div style="font-size:12px;color:var(--text-3);margin-bottom:12px;">${ORG_STATE.userRole} · ${ORG_STATE.orgName}</div>
+          <div style="display:flex;gap:8px;">
+            <button onclick="document.getElementById('user-pic-input').click()" style="padding:6px 14px;border:1.5px solid var(--border);border-radius:7px;font-size:12px;font-family:inherit;color:var(--text-2);background:var(--surface);cursor:pointer;transition:all .15s;" onmouseenter="this.style.borderColor='var(--brand)';this.style.color='var(--brand)'" onmouseleave="this.style.borderColor='var(--border)';this.style.color='var(--text-2)'">Upload photo</button>
+            ${ORG_STATE.userAvatar?`<button onclick="removeUserPic()" style="padding:6px 14px;border:1.5px solid var(--border);border-radius:7px;font-size:12px;font-family:inherit;color:var(--error);background:var(--surface);cursor:pointer;">Remove photo</button>`:''}
+          </div>
+          <div style="font-size:11px;color:var(--text-3);margin-top:8px;">Accepted: JPG, PNG, GIF · Max 5MB</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Personal info -->
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;box-shadow:var(--shadow);">
+      <div style="padding:14px 18px;border-bottom:1px solid var(--border);background:#F8FAFF;">
+        <div style="font-size:13px;font-weight:700;color:var(--text);">Personal information</div>
+      </div>
+      <div style="padding:18px;display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+        <div>
+          <div style="font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px;">Display name</div>
+          <input id="pf-name" value="${ORG_STATE.userName}" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-size:13px;font-family:inherit;color:var(--text);outline:none;" onfocus="this.style.borderColor='var(--brand)'" onblur="this.style.borderColor='var(--border)'"/>
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px;">Email</div>
+          <input id="pf-email" value="${ORG_STATE.userEmail}" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-size:13px;font-family:inherit;color:var(--text);outline:none;" onfocus="this.style.borderColor='var(--brand)'" onblur="this.style.borderColor='var(--border)'"/>
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px;">Role</div>
+          <input value="${ORG_STATE.userRole}" readonly style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-size:13px;font-family:inherit;color:var(--text-3);outline:none;background:var(--bg);"/>
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px;">Phone</div>
+          <input id="pf-phone" value="${ORG_STATE.userPhone}" placeholder="+1 555 000 0000" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-size:13px;font-family:inherit;color:var(--text);outline:none;" onfocus="this.style.borderColor='var(--brand)'" onblur="this.style.borderColor='var(--border)'"/>
+        </div>
+        <div style="grid-column:1/-1;">
+          <div style="font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px;">Status message</div>
+          <input id="pf-status" value="${ORG_STATE.userStatusMsg}" placeholder="What are you working on?" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-size:13px;font-family:inherit;color:var(--text);outline:none;" onfocus="this.style.borderColor='var(--brand)'" onblur="this.style.borderColor='var(--border)'"/>
+        </div>
+      </div>
+      <div style="padding:0 18px 16px;display:flex;justify-content:flex-end;">
+        <button onclick="saveProfile()" style="padding:7px 18px;background:var(--brand);color:#fff;border:none;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;">Save profile</button>
+      </div>
+    </div>
+
+    <!-- Availability -->
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;box-shadow:var(--shadow);">
+      <div style="padding:14px 18px;border-bottom:1px solid var(--border);background:#F8FAFF;">
+        <div style="font-size:13px;font-weight:700;color:var(--text);">Availability</div>
+      </div>
+      <div style="padding:16px 18px;display:flex;flex-direction:column;gap:8px;">
+        ${[{v:'active',label:'Active',sub:'Visible and available',color:'#3B7DD8'},{v:'away',label:'Away',sub:'Stepped out temporarily',color:'#B87316'},{v:'dnd',label:'Do not disturb',sub:'No notifications',color:'#C94B2C'},{v:'invisible',label:'Invisible',sub:'Appear offline to others',color:'#9CA3AF'}].map(s=>`
+        <div onclick="setUserStatus('${s.v}',this)" data-status="${s.v}" style="display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:8px;cursor:pointer;border:1.5px solid ${ORG_STATE.userStatus===s.v?'var(--brand)':'var(--border)'};background:${ORG_STATE.userStatus===s.v?'var(--bl)':'transparent'};transition:all .15s;" onmouseenter="if('${s.v}'!==ORG_STATE.userStatus)this.style.background='var(--bg)'" onmouseleave="if('${s.v}'!==ORG_STATE.userStatus)this.style.background='transparent'">
+          <span style="width:10px;height:10px;border-radius:50%;background:${s.color};flex-shrink:0;"></span>
+          <div style="flex:1;"><div style="font-size:13px;font-weight:500;color:var(--text);">${s.label}</div><div style="font-size:11px;color:var(--text-3);">${s.sub}</div></div>
+          ${ORG_STATE.userStatus===s.v?`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--brand)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`:''}
+        </div>`).join('')}
+      </div>
+    </div>
+
+    <!-- Security -->
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;box-shadow:var(--shadow);">
+      <div style="padding:14px 18px;border-bottom:1px solid var(--border);background:#F8FAFF;">
+        <div style="font-size:13px;font-weight:700;color:var(--text);">Security</div>
+      </div>
+      <div style="padding:16px 18px;display:flex;flex-direction:column;gap:14px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <div><div style="font-size:13px;font-weight:500;color:var(--text);">Change password</div><div style="font-size:11px;color:var(--text-3);">Last changed 3 months ago</div></div>
+          <button onclick="showToast('Password change — coming soon')" style="padding:5px 13px;border:1.5px solid var(--border);border-radius:6px;font-size:12px;font-family:inherit;color:var(--text-2);background:var(--surface);cursor:pointer;">Change</button>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <div><div style="font-size:13px;font-weight:500;color:var(--text);">Two-factor authentication</div><div style="font-size:11px;color:var(--text-3);">Not enabled</div></div>
+          <button onclick="showToast('2FA — coming soon')" style="padding:5px 13px;border:1.5px solid var(--border);border-radius:6px;font-size:12px;font-family:inherit;color:var(--text-2);background:var(--surface);cursor:pointer;">Enable</button>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;">
+          <div><div style="font-size:13px;font-weight:500;color:var(--error);">Sign out of all devices</div><div style="font-size:11px;color:var(--text-3);">Revoke all active sessions</div></div>
+          <button onclick="showToast('Signed out of all devices')" style="padding:5px 13px;border:1.5px solid var(--error);border-radius:6px;font-size:12px;font-family:inherit;color:var(--error);background:var(--surface);cursor:pointer;">Sign out all</button>
+        </div>
+      </div>
+    </div>
+
+  </div>`;
+}
+
+// ── APP STATE (profile & org) ──
+let ORG_STATE={
+  orgName:'Acme Corp',orgInitials:'AC',orgAvatar:null,industry:'Apparel',timezone:'UTC+0 (London)',dateFmt:'MMM D, YYYY',
+  userName:'Sarah Chen',userInitials:'SC',userAvatar:null,userEmail:'sarah.chen@acmecorp.com',userRole:'Admin',userPhone:'',userStatusMsg:'',userStatus:'active',
+};
+
+function handleUserPicUpload(inp){
+  const file=inp.files[0];if(!file)return;
+  if(file.size>5*1024*1024){showToast('File too large — max 5MB');return;}
+  const reader=new FileReader();
+  reader.onload=e=>{
+    ORG_STATE.userAvatar=e.target.result;
+    // Update all user avatars across the app
+    refreshUserAvatars();
+    renderProfilePage(document.getElementById('mc'));
+    showToast('Profile photo updated');
+  };
+  reader.readAsDataURL(file);
+}
+
+function handleOrgPicUpload(inp){
+  const file=inp.files[0];if(!file)return;
+  if(file.size>5*1024*1024){showToast('File too large — max 5MB');return;}
+  const reader=new FileReader();
+  reader.onload=e=>{
+    ORG_STATE.orgAvatar=e.target.result;
+    refreshOrgAvatars();
+    renderSettingsPage(document.getElementById('mc'));
+    showToast('Organisation logo updated');
+  };
+  reader.readAsDataURL(file);
+}
+
+function removeUserPic(){
+  ORG_STATE.userAvatar=null;
+  refreshUserAvatars();
+  renderProfilePage(document.getElementById('mc'));
+  showToast('Profile photo removed');
+}
+
+function removeOrgPic(){
+  ORG_STATE.orgAvatar=null;
+  refreshOrgAvatars();
+  renderSettingsPage(document.getElementById('mc'));
+  showToast('Organisation logo removed');
+}
+
+function refreshUserAvatars(){
+  const rav=document.querySelector('.rav');
+  if(rav){
+    if(ORG_STATE.userAvatar){
+      rav.innerHTML=`<img src="${ORG_STATE.userAvatar}" style="display:block;width:30px;height:30px;object-fit:cover;border-radius:50%;"/>`;
+      rav.style.padding='0';rav.style.overflow='hidden';
+    } else {
+      rav.innerHTML=ORG_STATE.userInitials;rav.style.padding='';rav.style.overflow='';
+    }
+  }
+  // also update profile page avatar if visible
+  const uav=document.getElementById('user-av-display');
+  if(uav){
+    if(ORG_STATE.userAvatar){
+      uav.innerHTML=`<img src="${ORG_STATE.userAvatar}" style="display:block;width:88px;height:88px;object-fit:cover;border-radius:50%;"/>`;
+    } else {
+      uav.innerHTML=`<span style="letter-spacing:-1px;">${ORG_STATE.userInitials}</span>`;
+    }
+  }
+}
+
+function refreshOrgAvatars(){
+  // Update sidebar org avatar
+  const orgAv=document.querySelector('.org-av');
+  if(orgAv){
+    if(ORG_STATE.orgAvatar){orgAv.innerHTML=`<img src="${ORG_STATE.orgAvatar}" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;"/>`;orgAv.style.padding='0';}
+    else{orgAv.innerHTML=ORG_STATE.orgInitials;orgAv.style.padding='';}
+  }
+  // Update org name display
+  const orgName=document.querySelector('.org-name');
+  if(orgName)orgName.textContent=ORG_STATE.orgName;
+}
+
+function saveProfile(){
+  const name=document.getElementById('pf-name')?.value.trim();
+  const email=document.getElementById('pf-email')?.value.trim();
+  const phone=document.getElementById('pf-phone')?.value.trim();
+  const statusMsg=document.getElementById('pf-status')?.value.trim();
+  if(name){ORG_STATE.userName=name;ORG_STATE.userInitials=name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);}
+  if(email)ORG_STATE.userEmail=email;
+  if(phone!==undefined)ORG_STATE.userPhone=phone;
+  if(statusMsg!==undefined)ORG_STATE.userStatusMsg=statusMsg;
+  refreshUserAvatars();
+  // Update topbar
+  const topLeft=document.getElementById('topbar')?.querySelector('.tb-left');
+  if(topLeft&&currentView?.type==='profile'){
+    const av=topLeft.querySelector('.tb-av');
+    if(av){if(ORG_STATE.userAvatar)av.innerHTML=`<img src="${ORG_STATE.userAvatar}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"/>`;else av.textContent=ORG_STATE.userInitials;}
+    const nm=topLeft.querySelector('.tb-name');if(nm)nm.textContent='My Profile';
+  }
+  showToast('Profile saved');
+}
+
+function saveOrgSettings(){
+  const name=document.getElementById('set-orgname')?.value.trim();
+  const industry=document.getElementById('set-industry')?.value;
+  const tz=document.getElementById('set-tz')?.value;
+  const fmt=document.getElementById('set-datefmt')?.value;
+  if(name){ORG_STATE.orgName=name;ORG_STATE.orgInitials=name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);}
+  if(industry)ORG_STATE.industry=industry;
+  if(tz)ORG_STATE.timezone=tz;
+  if(fmt)ORG_STATE.dateFmt=fmt;
+  refreshOrgAvatars();
+  showToast('Organisation settings saved');
+}
+
+function setUserStatus(status,el){
+  ORG_STATE.userStatus=status;
+  renderProfilePage(document.getElementById('mc'));
+  showToast('Status updated');
+}
+
+// ── SIDEBAR RENDER ──
+function renderSidebar(){
+  renderSubsList();
+  renderDynDepts();
+  renderGroupsList();
+  renderDMsList();
+}
+
+function renderDynDepts(){
+  const builtIn=['operations','hr','accounts'];
+  const extra=DEPTS.filter(d=>!builtIn.includes(d.id));
+  document.querySelectorAll('.dyn-dept-ni').forEach(e=>e.remove());
+  if(!extra.length)return;
+  const accounts=document.getElementById('ni-accounts');if(!accounts)return;
+  extra.forEach(d=>{
+    const div=document.createElement('div');
+    div.className='sbi dyn-dept-ni'+(currentView?.type==='dept'&&currentView.id===d.id?' active':'');
+    div.onclick=()=>openDept(d.id);
+    div.innerHTML=`<div class="sbi-dot" style="background:${d.color};"></div><span class="sbi-lbl">${d.name}</span>`;
+    accounts.insertAdjacentElement('afterend',div);
+  });
+}
+
+let dragSrcId=null;
+
+function renderSubsList(){
+  const list=document.getElementById('subs-list');list.innerHTML='';
+  SUBS.forEach(sd=>{
+    const isActive=currentView?.type==='subdept'&&currentView.id===sd.id;
+    const div=document.createElement('div');
+    div.className='subdept-row'+(isActive?' active':'');
+    div.draggable=true;
+    div.dataset.id=sd.id;
+    div.innerHTML=`
+      <div class="drag-grip" title="Drag to reorder"><span></span><span></span><span></span></div>
+      <div class="subdept-dot" style="background:${sd.color};"></div>
+      <span class="subdept-lbl">${sd.name}</span>
+      <span class="subdept-tt tt-${sd.type}">T${sd.type}</span>
+      ${sd.locked?`<span style="font-size:9px;opacity:.4;" title="Delete protected">🔒</span>`:''}
+      ${sd.unread>0?`<span class="subdept-unread">${sd.unread}</span>`:''}`;
+
+    // click-to-open — only if not dragging
+    div.addEventListener('click',()=>{ if(!dragSrcId) openSub(sd.id); });
+
+    // drag events
+    div.addEventListener('dragstart',e=>{
+      dragSrcId=sd.id;
+      div.classList.add('dragging');
+      e.dataTransfer.effectAllowed='move';
+      e.dataTransfer.setData('text/plain',sd.id);
+    });
+    div.addEventListener('dragend',()=>{
+      dragSrcId=null;
+      div.classList.remove('dragging');
+      document.querySelectorAll('.subdept-row').forEach(r=>r.classList.remove('drag-over-above','drag-over-below'));
+    });
+    div.addEventListener('dragover',e=>{
+      e.preventDefault();e.dataTransfer.dropEffect='move';
+      if(dragSrcId===sd.id)return;
+      document.querySelectorAll('.subdept-row').forEach(r=>r.classList.remove('drag-over-above','drag-over-below'));
+      const rect=div.getBoundingClientRect();
+      const mid=rect.top+rect.height/2;
+      div.classList.add(e.clientY<mid?'drag-over-above':'drag-over-below');
+    });
+    div.addEventListener('dragleave',()=>{
+      div.classList.remove('drag-over-above','drag-over-below');
+    });
+    div.addEventListener('drop',e=>{
+      e.preventDefault();
+      div.classList.remove('drag-over-above','drag-over-below');
+      if(!dragSrcId||dragSrcId===sd.id)return;
+      const fromIdx=SUBS.findIndex(s=>s.id===dragSrcId);
+      const toIdx=SUBS.findIndex(s=>s.id===sd.id);
+      if(fromIdx===-1||toIdx===-1)return;
+      const rect=div.getBoundingClientRect();
+      const insertAfter=e.clientY>rect.top+rect.height/2;
+      const [moved]=SUBS.splice(fromIdx,1);
+      const newTo=SUBS.findIndex(s=>s.id===sd.id);
+      SUBS.splice(insertAfter?newTo+1:newTo,0,moved);
+      dragSrcId=null;
+      renderSubsList();
+      // if org page is open, re-render it too
+      if(currentView?.type==='org')renderOrgPage(document.getElementById('mc'));
+      showToast(moved.name+' reordered');
+    });
+
+    list.appendChild(div);
+  });
+}
+
+function renderGroupsList(){
+  const list=document.getElementById('groups-list');list.innerHTML='';
+  GROUPS.forEach(g=>{
+    const isActive=currentView?.type==='group'&&currentView.id===g.id;
+    const div=document.createElement('div');div.className='sbi'+(isActive?' active':'');div.onclick=()=>openGroup(g.id);
+    div.innerHTML=`<div class="sbi-icon" style="background:${g.color};color:${g.tc};">${g.emoji}</div>
+      <span class="sbi-lbl">${g.name}</span>
+      ${g.unread>0?`<span class="sbi-badge">${g.unread}</span>`:''}`;
+    list.appendChild(div);
+  });
+}
+
+function renderDMsList(){
+  const list=document.getElementById('dms-list');list.innerHTML='';
+  DMS.forEach(dm=>{
+    const isActive=currentView?.type==='dm'&&currentView.id===dm.id;
+    const div=document.createElement('div');div.className='sbi'+(isActive?' active':'');div.onclick=()=>openDM(dm.id);
+    div.innerHTML=`<div class="sbi-av" style="background:${dm.bg};color:${dm.tc};">${dm.av}</div>
+      <span class="sbi-lbl">${dm.name}</span>
+      ${dm.online?'<div class="online-dot"></div>':''}
+      ${dm.unread>0?`<span class="sbi-badge">${dm.unread}</span>`:''}`;
+    list.appendChild(div);
+  });
+}
+
+function toggleOps(e){
+  e.stopPropagation();opsOpen=!opsOpen;
+  document.getElementById('ops-subs').classList.toggle('hidden',!opsOpen);
+  document.getElementById('ops-arrow').classList.toggle('open',opsOpen);
+}
+
+// ── NAVIGATION ──
+function openSub(id){
+  currentView={type:'subdept',id};activeTab='messages';
+  const sd=SUBS.find(s=>s.id===id);if(!sd)return;
+  sd.unread=0;
+  setTopbar(sd.color,sd.name,`Type ${sd.type} · ${sd.label}`);
+  const tr=document.getElementById('tb-right');
+  tr.innerHTML=`${sd.type===1?`<button class="tbb prim" onclick="switchTab('input')">+ Add style</button>`:''}<button class="tbb" onclick="switchTab('styles')">All styles</button>${sd.type===3?`<button class="tbb" onclick="switchTab('log')">📋 Log</button>`:''}<button class="tbb" onclick="editSubModal('${id}')" title="Edit sub-department"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit</button>`;
+  renderTabbar();renderContent();renderSidebar();
+}
+
+function openDept(id){
+  currentView={type:'dept',id};activeTab='messages';
+  // Look up from DEPTS array first, fallback to built-in maps
+  const dData=DEPTS.find(d=>d.id===id);
+  const name=dData?dData.name:{hr:'HR',accounts:'Accounts',operations:'Operations'}[id]||id;
+  const color=dData?dData.color:{hr:'#C94B2C',accounts:'#534AB7',operations:'#1B3A6B'}[id]||'#6B7280';
+  const icon=dData?dData.icon:{hr:'HR',accounts:'ACC',operations:'OPS'}[id]||name.slice(0,3).toUpperCase();
+  const desc=dData?dData.desc:{hr:'Human resources · Leave, hiring, compliance',accounts:'Finance, invoices, and expense tracking',operations:'Production operations channel'}[id]||'Department channel';
+  const top=document.getElementById('topbar');
+  top.querySelector('.tb-left').innerHTML=`
+    <div class="tb-av" style="width:30px;height:30px;border-radius:7px;background:${color};color:#fff;font-size:10px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;letter-spacing:-.5px;">${icon}</div>
+    <div class="tb-info"><div class="tb-name">${name}</div><div class="tb-sub">${desc}</div></div>`;
+  document.getElementById('tb-right').innerHTML=`<button class="tbb" onclick="openOrgPage()">View org</button><button class="tbb" onclick="openEditDept('${id}')" title="Edit department"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit</button>`;
+  document.getElementById('tabbar').innerHTML='';
+  document.getElementById('tabbar').classList.add('hidden');
+  if(!MSGS[id])MSGS[id]=[];
+  renderChatOnly(id);
+  document.querySelectorAll('.sbi,.subdept-row,.sdr').forEach(e=>e.classList.remove('active','on'));
+  const ni=document.getElementById('ni-'+id);if(ni)ni.classList.add('active');
+  renderSidebar();
+}
+
+function openGroup(id){
+  currentView={type:'group',id};activeTab='messages';
+  const g=GROUPS.find(x=>x.id===id);if(!g)return;
+  g.unread=0;
+  const top=document.getElementById('topbar');
+  top.querySelector('.tb-left').innerHTML=`
+    <div class="tb-av" style="width:30px;height:30px;border-radius:7px;background:${g.color||'#EBF2FF'};display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">${g.emoji}</div>
+    <div class="tb-info">
+      <div class="tb-title">${g.name}</div>
+      <div class="tb-sub" id="tb-sub">${g.members.length} members · ${g.desc}</div>
+    </div>`;
+  const tr=document.getElementById('tb-right');
+  tr.innerHTML=`<button class="tbb" onclick="showGroupInfo('${id}')"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> Members</button><button class="tbb" onclick="editGroupModal('${id}')"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit</button>`;
+  document.getElementById('tabbar').innerHTML='';
+  document.getElementById('tabbar').classList.add('hidden');
+  if(!MSGS[id])MSGS[id]=[];
+  renderChatOnly(id);renderSidebar();
+}
+
+function openDM(id){
+  currentView={type:'dm',id};activeTab='messages';
+  const dm=DMS.find(x=>x.id===id);if(!dm)return;
+  dm.unread=0;
+  // topbar with user avatar
+  const topbar=document.getElementById('topbar');
+  topbar.querySelector('.tb-left').innerHTML=`
+    <div class="tb-av" style="background:${dm.bg};color:${dm.tc};">${dm.av}</div>
+    <div class="tb-info">
+      <div class="tb-title">${dm.name}</div>
+      <div class="tb-sub"><span class="dm-status"><span class="dm-online" style="background:${dm.online?'var(--brand2)':'var(--border)'}"></span>${dm.online?'Active now':dm.role}</span></div>
+    </div>`;
+  document.getElementById('tb-right').innerHTML=`<button class="tbb" onclick="showToast('Call coming soon')"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.15 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.07 1.18h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.06 8.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>Call</button><button class="tbb" onclick="editDMModal('${id}')"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit</button>`;
+  document.getElementById('tabbar').innerHTML='';
+  document.getElementById('tabbar').classList.add('hidden');
+  if(!MSGS[id])MSGS[id]=[];
+  renderChatOnly(id);renderSidebar();
+}
+
+function setTopbar(dotColor,title,sub){
+  const topbar=document.getElementById('topbar');
+  topbar.querySelector('.tb-left').innerHTML=`
+    <div class="tb-av" style="border-radius:50%;background:${dotColor};color:#fff;font-size:9px;font-weight:700;">${title.slice(0,2)}</div>
+    <div class="tb-info"><div class="tb-title">${title}</div><div class="tb-sub">${sub}</div></div>`;
+}
+function setTopbarIcon(icon,title,sub){
+  const topbar=document.getElementById('topbar');
+  topbar.querySelector('.tb-left').innerHTML=`
+    <div class="tb-av hash">${icon}</div>
+    <div class="tb-info"><div class="tb-title">${title}</div><div class="tb-sub">${sub}</div></div>`;
+}
+function setTopbarGroupDM(emoji,bg,tc,title,sub){
+  const topbar=document.getElementById('topbar');
+  topbar.querySelector('.tb-left').innerHTML=`
+    <div class="tb-av square" style="background:${bg};color:${tc};">${emoji}</div>
+    <div class="tb-info"><div class="tb-title">${title}</div><div class="tb-sub">${sub}</div></div>`;
+}
+
+// ── REPORTS ──
+function openReports(){
+  currentView={type:'reports'};
+  document.querySelectorAll('.sbi,.subdept-row').forEach(el=>el.classList.remove('active'));
+  setTopbarIcon('📊','Daily Production Report','Compilation of all T3 daily input · Operations');
+  document.getElementById('tb-right').innerHTML=`<button class="tbb" onclick="showToast('Exported!')">Export PDF</button>`;
+  document.getElementById('tabbar').innerHTML='';
+  document.getElementById('tabbar').classList.add('hidden');
+  const mc=document.getElementById('mc');
+  mc.style.background='var(--bg)';
+  renderReports(mc);
+  renderSubsList();renderGroupsList();renderDMsList();
+}
+
+function renderReports(mc){
+  mc.style.overflowY='auto';
+  const T3subs=SUBS.filter(s=>s.type===3);
+  const mS=STYLES.filter(s=>s.month===reportMonth);
+  const mDays=getMonthDays(reportMonth);
+  const workDays=mDays.filter(d=>!d.isSunday).length;
+  const deptTotals=T3subs.map(sd=>{
+    const lk=gLog(sd);const total=mS.reduce((a,s)=>a+gTotal(s[lk]),0);
+    const dSet=new Set();mS.forEach(s=>(s[lk]||[]).forEach(e=>dSet.add(e.day)));
+    return{sd,total,days:dSet.size};
+  });
+  const grand=deptTotals.reduce((a,d)=>a+d.total,0);
+  mc.innerHTML=`<div class="rpw">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+      <div style="font-size:15px;font-weight:700;color:var(--text);">Daily Production Report</div>
+      <div style="display:flex;gap:5px;">${MONTHS.map((m,i)=>`<div class="mnt${i===reportMonth?' active':''}" onclick="setRepMonth(${i})">${m.split(' ')[0]}</div>`).join('')}</div>
+    </div>
+    <div class="rp-cards">${deptTotals.map(({sd,total,days})=>{
+      const oT=mS.reduce((a,s)=>a+tQty(s),0);const p=oT>0?Math.min(100,Math.round(total/oT*100)):0;
+      return`<div class="rpc"><div class="rpc-h"><span class="rpc-dot" style="background:${sd.color};"></span>${sd.name}</div><div class="rpc-n">${total.toLocaleString()}</div><div class="rpc-s">${sd.recordLabel} · ${days} days logged</div><div class="rpc-bar"><div class="rpc-fill" style="width:${p}%;background:${sd.color};"></div></div></div>`;
+    }).join('')}</div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+      <div><div style="font-size:10px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.04em;margin-bottom:2px;">Total output — ${MONTHS[reportMonth]}</div>
+      <div style="font-size:24px;font-weight:700;color:var(--text);">${grand.toLocaleString()} <span style="font-size:12px;font-weight:400;color:var(--text-3);">pcs across all depts</span></div></div>
+      <div style="text-align:right;"><div style="font-size:11px;color:var(--text-3);margin-bottom:2px;">${workDays} working days · ${mS.length} styles</div>
+      <div style="font-size:13px;color:var(--brand);font-weight:500;">${grand>0&&workDays>0?Math.round(grand/workDays).toLocaleString()+' pcs/day avg':'No input yet'}</div></div>
+    </div>
+    ${T3subs.map(sd=>{
+      const lk=gLog(sd);const dT=mS.reduce((a,s)=>a+gTotal(s[lk]),0);
+      const dSet=new Set();mS.forEach(s=>(s[lk]||[]).forEach(e=>dSet.add(e.day)));
+      return`<div class="rds"><div class="rdh">
+        <span style="width:8px;height:8px;border-radius:50%;background:${sd.color};display:inline-block;flex-shrink:0;"></span>
+        <span class="rdh-title">${sd.name}</span>
+        <span style="font-size:11px;color:var(--text-3);">${dSet.size} days logged</span>
+        <span class="rdh-total">${dT.toLocaleString()} ${sd.recordLabel}</span>
+      </div>
+      <table class="rpt"><thead><tr><th>Style</th><th>Buyer</th><th>Order qty</th><th>Produced</th><th>% done</th><th>Progress</th><th class="mth">Monitor target</th><th class="mth">vs target</th></tr></thead>
+      <tbody>${mS.map(s=>{
+        const log=s[lk]||[];const prod=gTotal(log);const oQ=tQty(s);const p=oQ>0?Math.min(100,Math.round(prod/oQ*100)):0;
+        const mon=s.monitor;const isM=mon&&mon.subId===sd.id;
+        const styleDays=new Set(log.map(e=>e.day)).size;
+        const vsT=isM&&mon.dailyTarget&&styleDays>0?prod-(mon.dailyTarget*styleDays):null;
+        return`<tr><td><span class="sc">${s.code}</span></td><td style="color:var(--text-2);">${s.buyer}</td>
+          <td style="font-weight:500;">${oQ.toLocaleString()}</td>
+          <td style="font-weight:700;color:${prod>0?'var(--brand)':'var(--text-3)'};">${prod.toLocaleString()}</td>
+          <td style="font-weight:500;color:${p>=100?'var(--brand)':'var(--text-2)'};">${p}%</td>
+          <td><div class="rpb"><div class="rpbf" style="width:${p}%;background:${sd.color};"></div></div></td>
+          <td class="mtd">${isM?`<span style="background:var(--blue);color:#fff;font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;">MON</span> ${mon.dailyTarget} pcs/day`:'—'}</td>
+          <td class="mtd">${vsT!==null?`<span style="font-weight:600;color:${vsT>=0?'#0F2448':'var(--error)'};">${vsT>=0?'+':''}${vsT.toLocaleString()} pcs</span>`:'—'}</td></tr>`;
+      }).join('')}
+      <tr style="background:#EEF4FF;"><td colspan="3" style="font-size:12px;color:var(--text-2);font-weight:600;">Total — ${mS.length} styles</td><td style="font-weight:700;color:var(--brand);">${dT.toLocaleString()}</td><td colspan="4" style="font-size:11px;color:var(--text-3);">${dSet.size} days with input</td></tr>
+      </tbody></table></div>`;
+    }).join('')}
+  </div>`;
+}
+function setRepMonth(i){reportMonth=i;renderReports(document.getElementById('mc'));}
+
+// ── TABS ──
+function getTabs(sd){
+  const tabs=[{id:'messages',label:'💬 Messages'}];
+  if(sd.type===1)tabs.push({id:'input',label:'Add style'});
+  else if(sd.type===2)tabs.push({id:'input',label:'Work'});
+  else tabs.push({id:'input',label:'Daily input'});
+  tabs.push({id:'styles',label:'All styles'});
+  if(sd.type===3)tabs.push({id:'log',label:'📋 Daily log'});
+  tabs.push({id:'members',label:'Members'});
+  return tabs;
+}
+function renderTabbar(){
+  if(currentView?.type!=='subdept'){document.getElementById('tabbar').classList.add('hidden');return;}
+  const sd=SUBS.find(s=>s.id===currentView.id);if(!sd)return;
+  const tb=document.getElementById('tabbar');tb.classList.remove('hidden');
+  tb.innerHTML=getTabs(sd).map(t=>`<div class="tab${activeTab===t.id?' active':''}" onclick="switchTab('${t.id}')">${t.label}</div>`).join('');
+}
+function switchTab(t){activeTab=t;renderTabbar();renderContent();}
+function renderContent(){
+  const mc=document.getElementById('mc');
+  if(currentView?.type!=='subdept'){return;}
+  const sd=SUBS.find(s=>s.id===currentView.id);if(!sd)return;
+  mc.style.overflowY='hidden';
+  if(activeTab==='messages')renderMessages(mc,currentView.id,sd.name);
+  else if(activeTab==='input'){if(sd.type===1)renderT1(mc);else if(sd.type===2)renderT2(mc);else renderT3(mc,sd);}
+  else if(activeTab==='styles')renderAllStyles(mc,sd);
+  else if(activeTab==='log')renderDailyLog(mc,sd);
+  else renderMembers(mc,sd);
+}
+
+// ── CHAT ONLY (groups, DMs, depts) ──
+function renderChatOnly(msgKey){
+  const mc=document.getElementById('mc');
+  mc.style.overflowY='hidden';
+  mc.style.background='var(--surface)';
+  if(!MSGS[msgKey])MSGS[msgKey]=[];
+  let placeholderName=msgKey;
+  if(currentView.type==='group'){const g=GROUPS.find(x=>x.id===msgKey);placeholderName=g?.name||msgKey;}
+  else if(currentView.type==='dm'){const dm=DMS.find(x=>x.id===msgKey);placeholderName=dm?.name||msgKey;}
+  else{placeholderName=msgKey.charAt(0).toUpperCase()+msgKey.slice(1);}
+  mc.innerHTML=`<div class="chat-area">
+    <div class="chat-msgs" id="msgs-area">
+      <div class="date-sep"><div class="date-line"></div><span class="date-lbl">Today · Jul 3, 2025</span><div class="date-line"></div></div>
+      ${MSGS[msgKey].map(m=>buildMsg(m)).join('')}
+    </div>
+    <div class="composer">
+      <div class="comp-toolbar">
+        <button class="ctool" onclick="showToast('Attach file')"><svg viewBox="0 0 24 24"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg></button>
+        <button class="ctool" onclick="showToast('Attach image')"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></button>
+        <button class="ctool" onclick="showToast('Emoji')">😊</button>
+        ${currentView.type==='group'||currentView.type==='subdept'?`<button class="ctool" onclick="showToast('Tag style')">📋</button><button class="ctool" onclick="showToast('Send report')"><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></button>`:''}
+      </div>
+      <div class="comp-row">
+        <textarea class="comp-input" id="ci" placeholder="Message ${placeholderName}..." rows="1"
+          onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMsg('${msgKey}');}"
+          oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px'"></textarea>
+        <button class="send-btn" onclick="sendMsg('${msgKey}')"><svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>
+      </div>
+    </div>
+  </div>`;
+  setTimeout(()=>{const a=document.getElementById('msgs-area');if(a)a.scrollTop=a.scrollHeight;},40);
+}
+
+function renderMessages(mc,msgKey,channelName){
+  mc.style.overflowY='hidden';
+  mc.style.background='var(--surface)';
+  if(!MSGS[msgKey])MSGS[msgKey]=[];
+  mc.innerHTML=`<div class="chat-area">
+    <div class="chat-msgs" id="msgs-area">
+      <div class="date-sep"><div class="date-line"></div><span class="date-lbl">Today · Jul 3, 2025</span><div class="date-line"></div></div>
+      ${MSGS[msgKey].map(m=>buildMsg(m)).join('')}
+    </div>
+    <div class="composer">
+      <div class="comp-toolbar">
+        <button class="ctool" onclick="showToast('Attach file')"><svg viewBox="0 0 24 24"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg></button>
+        <button class="ctool" onclick="showToast('Attach image')"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></button>
+        <button class="ctool" onclick="showToast('Tag style')">📋</button>
+        <button class="ctool" onclick="showToast('Send report')"><svg viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></button>
+        <button class="ctool" onclick="showToast('Emoji')">😊</button>
+      </div>
+      <div class="comp-row">
+        <textarea class="comp-input" id="ci" placeholder="Message ${channelName}..." rows="1"
+          onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMsgSub('${msgKey}');}"
+          oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,120)+'px'"></textarea>
+        <button class="send-btn" onclick="sendMsgSub('${msgKey}')"><svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></button>
+      </div>
+    </div>
+  </div>`;
+  setTimeout(()=>{const a=document.getElementById('msgs-area');if(a)a.scrollTop=a.scrollHeight;},40);
+}
+
+function buildMsg(m){
+  if(m.sys)return`<div class="sys-pill">${m.sys}</div>`;
+  const att=m.att?`<div class="att-card${m.mine?'':' light'}"><span class="att-icon">${m.att.icon||m.att.ico||'📎'}</span><div class="att-info"><div class="att-name">${m.att.name}</div><div class="att-sz">${m.att.size}</div></div></div>`:'';
+  const rxn=m.rxn?`<div class="rxn-row">${m.rxn.map(r=>`<div class="rxn-pill">${r.e}<span>${r.n}</span></div>`).join('')}</div>`:'';
+  return`<div class="msg-group"><div class="msg-row${m.mine?' mine':''}">
+    ${!m.mine?`<div class="msg-av" style="background:${m.bg};color:${m.tc};">${m.av}</div>`:''}
+    <div class="msg-col">
+      ${!m.mine?`<div class="msg-sender">${m.name}</div>`:''}
+      <div class="bubble${m.mine?' mine':''}">${m.text}${att}</div>
+      ${rxn}
+      <div class="msg-time">${m.mine?'You · ':''}${m.time}${m.mine?' ✓✓':''}</div>
+    </div>
+    ${m.mine?`<div class="msg-av" style="background:#2456A4;color:#fff;">SC</div>`:''}
+  </div></div>`;
+}
+
+function sendMsg(key){
+  const ci=document.getElementById('ci');if(!ci)return;
+  const text=ci.value.trim();if(!text)return;
+  const area=document.getElementById('msgs-area');if(!area)return;
+  const m={av:'SC',bg:'#2456A4',tc:'#fff',name:'Sarah Chen',text,time:nowTime(),mine:true};
+  if(!MSGS[key])MSGS[key]=[];MSGS[key].push(m);
+  const div=document.createElement('div');div.innerHTML=buildMsg(m);
+  area.appendChild(div.firstElementChild||div);
+  ci.value='';ci.style.height='';area.scrollTop=area.scrollHeight;
+}
+function sendMsgSub(key){sendMsg(key);}
+
+// ── GROUP INFO ──
+const ALL_PPL={SC:{name:'Sarah Chen',role:'Admin',bg:'#2456A4',tc:'#fff'},JO:{name:'James Obi',role:'Operations Head',bg:'#FAECE7',tc:'#712B13'},AK:{name:'Ama Kofi',role:'Sewing Lead',bg:'#E6F1FB',tc:'#0C447C'},RK:{name:'Raj Kumar',role:'QC Head',bg:'#FAEEDA',tc:'#633806'},LB:{name:'Lena Boateng',role:'Packing Lead',bg:'#EAF3DE',tc:'#27500A'},MB:{name:'Mia Brown',role:'Accounts',bg:'#FAE8F5',tc:'#7B1A6A'},KS:{name:'Kwame Sarfo',role:'HR Manager',bg:'#E8F0FA',tc:'#1A4B7B'}};
+
+function showGroupInfo(id){
+  const g=GROUPS.find(x=>x.id===id);if(!g)return;
+  const nonMembers=Object.entries(ALL_PPL).filter(([k])=>!g.members.includes(k)&&k!=='SC');
+  showModalHTML(`<h3>${g.emoji} ${g.name}</h3><p>${g.desc}</p>
+    <label>Members (${g.members.length})</label>
+    <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px;">
+    ${g.members.map(av=>{const p=ALL_PPL[av]||{name:av,role:'',bg:'#ccc',tc:'#fff'};const online=av==='SC'||av==='JO'||av==='RK';return`<div style="display:flex;align-items:center;gap:9px;padding:8px 11px;border:1px solid var(--border);border-radius:8px;">
+      <div style="width:28px;height:28px;border-radius:50%;background:${p.bg};color:${p.tc};display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0;">${av}</div>
+      <div style="flex:1;"><div style="font-size:13px;font-weight:500;color:var(--text);">${p.name}</div><div style="font-size:11px;color:var(--text-3);">${p.role}</div></div>
+      <div style="width:7px;height:7px;border-radius:50%;background:${online?'#3B7DD8':'#ccc'}"></div>
+    </div>`;}).join('')}
+    </div>
+    ${nonMembers.length>0?`<label>Add a member</label><div style="display:flex;flex-direction:column;gap:5px;margin-bottom:14px;">${nonMembers.map(([k,p])=>`<div style="display:flex;align-items:center;gap:9px;padding:7px 10px;border:1px solid var(--border);border-radius:8px;cursor:pointer;" onclick="addMemberToGroup('${id}','${k}',this)" onmouseenter="this.style.borderColor='var(--brand)';this.style.background='var(--bl)'" onmouseleave="this.style.borderColor='var(--border)';this.style.background=''">
+      <div style="width:26px;height:26px;border-radius:50%;background:${p.bg};color:${p.tc};display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;flex-shrink:0;">${k}</div>
+      <div style="flex:1;"><div style="font-size:13px;font-weight:500;color:var(--text);">${p.name}</div><div style="font-size:11px;color:var(--text-3);">${p.role}</div></div>
+      <span style="font-size:11px;color:var(--brand);font-weight:500;">+ Add</span>
+    </div>`).join('')}</div>`:''}
+    <div class="modal-btns"><button class="mbb prim" onclick="closeModal()">Done</button></div>`);
+}
+
+function addMemberToGroup(gId,av,row){
+  const g=GROUPS.find(x=>x.id===gId);if(!g)return;
+  if(!g.members.includes(av))g.members.push(av);
+  const p=ALL_PPL[av];
+  // add system message
+  if(!MSGS[gId])MSGS[gId]=[];
+  MSGS[gId].push({sys:`${p?.name||av} was added to the group`});
+  showToast(`${p?.name||av} added to ${g.name}`);
+  row.remove();
+  // refresh topbar member count
+  document.getElementById('tb-sub').textContent=`${g.members.length} members · ${g.desc}`;
+}
+
+// ── T1 ──
+function renderT1(mc){
+  colourRowCount=0;colourRowModes={};
+  const styles=STYLES.filter(s=>s.month===activeMonth&&s.week===activeWeek);
+  const t3Opts=T3_LIST.map(s=>`<option value="${s.id}"${s.id==='sewing'?' selected':''}>${s.name}</option>`).join('');
+  mc.innerHTML=`<div class="content"><div class="month-nav">${MONTHS.map((m,i)=>`<div class="mnt${i===activeMonth?' active':''}" onclick="setMonth(${i})">${m}</div>`).join('')}</div>
+  <div class="week-nav">${WEEKS.map((w,i)=>`<div class="wnt${i===activeWeek?' active':''}" onclick="setWeek(${i})">${w}</div>`).join('')}</div>
+  <div class="pw">
+    <div class="fc"><div class="fch"><h4>New style — ${MONTHS[activeMonth]} · ${WEEKS[activeWeek]}</h4></div>
+    <div class="fcb">
+      <div class="fr">
+        <div class="fd"><div class="fl">Style code *</div><input class="fi" id="f-code" placeholder="ST-006"/></div>
+        <div class="fd wide"><div class="fl">Buyer *</div><input class="fi" id="f-buyer" placeholder="e.g. Zara"/></div>
+        <div class="fd"><div class="fl">Fabric arrival</div><input class="fi" id="f-fabric" type="date"/></div>
+        <div class="fd"><div class="fl">Accessories</div><input class="fi" id="f-acc" type="date"/></div>
+        <div class="fd"><div class="fl">Shipment date *</div><input class="fi" id="f-ship" type="date"/></div>
+      </div>
+      <div class="mon-sec">
+        <div class="mon-head"><span class="mon-badge">MONITOR</span><span style="font-size:12px;font-weight:600;color:#0C447C;">Track production dept</span><select class="mon-sel" id="mon-sub">${t3Opts}</select></div>
+        <div class="fr">
+          <div class="fd"><div class="mfl">Planned start</div><input class="mfi" id="mon-start" type="date"/></div>
+          <div class="fd"><div class="mfl">Planned finish</div><input class="mfi" id="mon-finish" type="date"/></div>
+          <div class="fd"><div class="mfl">Daily target (pcs)</div><input class="mfi" id="mon-target" type="number" placeholder="e.g. 150"/></div>
+        </div>
+      </div>
+      <div class="csec"><span>Colour options & quantity</span><button class="add-c-btn" onclick="addCR()">+ Add colour</button></div>
+      <div class="col-lbl-row"><div class="cl">Colour name</div><div class="cl r">Qty (pcs)</div><div></div></div>
+      <div id="colour-rows"></div>
+      <button class="sub-btn" onclick="submitStyle()">Add style to ${MONTHS[activeMonth]} · ${WEEKS[activeWeek]}</button>
+    </div></div>
+    ${styles.length>0?`<div class="slc"><div class="slch"><h4>${styles.length} style${styles.length!==1?'s':''} — ${MONTHS[activeMonth]} · ${WEEKS[activeWeek]}</h4></div>
+      ${styles.map(s=>{const si=STYLES.indexOf(s);const mon=s.monitor;const mS=T3_LIST.find(x=>x.id===mon?.subId);return`<div class="se">
+        <div class="se-head">
+          <span class="sc">${s.code}</span><span class="mtag">${s.buyer}</span><span class="mtag">🧵 ${s.fabric}</span><span class="mtag">🪡 ${s.accessories}</span><span class="mtag">🚢 ${s.shipDate}</span>
+          <span style="margin-left:auto;font-size:13px;font-weight:700;color:var(--brand);">${tQty(s).toLocaleString()} pcs</span>
+          <button onclick="editStyleModal(${si})" style="padding:3px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;color:var(--text-2);background:var(--surface);cursor:pointer;font-family:inherit;margin-left:6px;" onmouseenter="this.style.borderColor='var(--brand)';this.style.color='var(--brand)'" onmouseleave="this.style.borderColor='var(--border)';this.style.color='var(--text-2)'">Edit</button>
+          <button onclick="deleteStyleConfirm(${si})" style="padding:3px 10px;border:1px solid var(--border);border-radius:6px;font-size:12px;color:var(--err);background:var(--surface);cursor:pointer;font-family:inherit;" onmouseenter="this.style.borderColor='var(--err)';this.style.background='#FEF0EB'" onmouseleave="this.style.borderColor='var(--border)';this.style.background='var(--surface)'">Delete</button>
+        </div>
+        <div class="se-body"><div style="flex:1;">${s.colours.map(cv=>`<div style="display:flex;align-items:center;gap:8px;padding:2px 0;font-size:13px;"><span style="color:var(--text-2);min-width:90px;">${cv.name}</span><span style="font-weight:500;">${cv.qty.toLocaleString()} pcs</span></div>`).join('')}</div>
+          ${mon&&mS?`<div class="se-mon"><div class="se-mon-title"><span class="se-mon-badge">MONITOR</span>${mS.name}</div><div class="se-mon-row"><div class="se-mon-item"><div class="se-mon-lbl">Start</div><div class="se-mon-val">${mon.startDate||'—'}</div></div><div class="se-mon-item"><div class="se-mon-lbl">Finish</div><div class="se-mon-val">${mon.finishDate||'—'}</div></div><div class="se-mon-item"><div class="se-mon-lbl">Daily target</div><div class="se-mon-val">${mon.dailyTarget?mon.dailyTarget+' pcs/day':'—'}</div></div></div></div>`:''}
+        </div></div>`;}).join('')}
+    </div>`:''}
+  </div></div>`;
+  addCR();addCR();addCR();
+}
+function addCR(){
+  const idx=colourRowCount++;colourRowModes[idx]='simple';
+  const sH=`<table class="szrow"><thead><tr>${SIZES.map(s=>`<th>${s}</th>`).join('')}</tr></thead><tbody><tr>${SIZES.map(()=>`<td><input type="number" placeholder="0" min="0"/></td>`).join('')}</tr></tbody></table>`;
+  const w=document.createElement('div');w.className='rw';w.id='rw-'+idx;
+  w.innerHTML=`<div class="cr" data-idx="${idx}"><input class="inp-cn" id="cn-${idx}" placeholder="e.g. Navy Blue"/><input class="inp-cq" id="cq-${idx}" type="number" placeholder="0" min="0"/><span class="pcs-lbl">pcs</span>${idx>0?`<button class="rm-btn" onclick="rCR(${idx})">✕</button>`:'<span></span>'}</div>
+  <div class="mode-row"><div class="mode-tog"><button class="mt-b active" onclick="setCM(${idx},'simple')">Total only</button><button class="mt-b" onclick="setCM(${idx},'detailed')">Sizes</button></div></div>
+  <div id="cs-${idx}" class="hidden">${sH}</div>`;
+  const c=document.getElementById('colour-rows');if(c)c.appendChild(w);
+}
+function rCR(i){const el=document.getElementById('rw-'+i);if(el)el.remove();}
+function setCM(i,mode){colourRowModes[i]=mode;const s=document.getElementById('cs-'+i);if(s)s.classList.toggle('hidden',mode==='simple');document.querySelectorAll(`#rw-${i} .mt-b`).forEach(b=>b.classList.toggle('active',(mode==='simple'&&b.textContent==='Total only')||(mode==='detailed'&&b.textContent==='Sizes')));}
+function submitStyle(){
+  const code=document.getElementById('f-code')?.value.trim();const buyer=document.getElementById('f-buyer')?.value.trim();
+  if(!code||!buyer){showToast('Style code and buyer required');return;}
+  const monSubId=document.getElementById('mon-sub')?.value||'sewing';
+  const rows=document.querySelectorAll('.cr');const colours=[];
+  rows.forEach(row=>{const idx=parseInt(row.dataset.idx);const name=document.getElementById('cn-'+idx)?.value.trim()||'Colour '+(idx+1);const qty=parseInt(document.getElementById('cq-'+idx)?.value)||0;const mode=colourRowModes[idx]||'simple';const sI=row.closest('.rw')?.querySelectorAll('.szrow input');const sizes=mode==='detailed'?Array.from(sI||[]).map((inp,i)=>({s:SIZES[i],q:parseInt(inp.value)||0})).filter(s=>s.q>0):[];colours.push({name,qty,mode,sizes});});
+  STYLES.push({code,buyer,fabric:fmtD(document.getElementById('f-fabric')?.value),accessories:fmtD(document.getElementById('f-acc')?.value),shipDate:fmtD(document.getElementById('f-ship')?.value),month:activeMonth,week:activeWeek,colours,monitor:{subId:monSubId,startDate:fmtD(document.getElementById('mon-start')?.value),finishDate:fmtD(document.getElementById('mon-finish')?.value),dailyTarget:parseInt(document.getElementById('mon-target')?.value)||0},prepStatus:'not-started',prepDone:0,sewingStatus:'not-started',sewingLog:[],qcStatus:'not-started',qcLog:[],packingStatus:'not-started',packingLog:[]});
+  showToast(`${code} added`);renderT1(document.getElementById('mc'));
+}
+
+// ── T2 ──
+function renderT2(mc){
+  const mS=STYLES.filter(s=>s.month===activeMonth);const nextSd=SUBS[SUBS.findIndex(s=>s.id===currentView.id)+1];
+  const done=mS.filter(s=>s.prepStatus==='completed').length,prog=mS.filter(s=>s.prepStatus==='in-progress').length,none=mS.filter(s=>s.prepStatus==='not-started').length;
+  let html=`<div class="content"><div class="month-nav">${MONTHS.map((m,i)=>`<div class="mnt${i===activeMonth?' active':''}" onclick="setMonth(${i})">${m}</div>`).join('')}</div>
+  <div class="sbar"><span style="font-weight:500;color:var(--text);">${MONTHS[activeMonth]} — ${mS.length} styles</span><div style="display:flex;gap:10px;font-size:13px;"><span style="color:#0F2448;">● ${done} done</span><span style="color:#633806;">● ${prog} in progress</span><span style="color:#8fada5;">● ${none} not started</span>${nextSd?`<span style="color:var(--brand);">→ unlocks ${nextSd.name}</span>`:''}</div></div>
+  <div class="tblw"><table class="bt"><thead><tr><th>Style</th><th style="width:110px;">Actions</th><th>Buyer</th><th>Fabric</th><th>Ship</th><th class="cc">Colours</th><th class="qc">Total qty</th><th>Status</th></tr></thead><tbody>`;
+  WEEKS.forEach((wl,wi)=>{const ws=mS.filter(s=>s.week===wi);if(!ws.length)return;
+    html+=`<tr class="wgh"><td colspan="8">📅 ${wl} — ${ws.length} style${ws.length!==1?'s':''}</td></tr>`;
+    ws.forEach(s=>{const si=STYLES.indexOf(s);const cH=s.colours.map(cv=>`<div style="font-size:12px;margin-bottom:1px;">${cv.name} — <strong>${cv.qty.toLocaleString()}</strong> pcs</div>`).join('');
+      html+=`<tr><td><span class="sc">${s.code}</span></td><td><button style="${BS_DONE}" onclick="setPSt(${si},'completed')">✓ Done</button><button style="${BS_START}" onclick="setPSt(${si},'in-progress')">▶ Start</button><button style="${BS_RESET}" onclick="setPSt(${si},'not-started')">↺ Reset</button></td><td>${s.buyer}</td><td>${s.fabric}</td><td>${s.shipDate}</td><td class="cc">${cH}</td><td class="qc" style="font-weight:600;color:var(--brand);">${tQty(s).toLocaleString()}</td>
+        <td><div class="sp ${s.prepStatus==='completed'?'sp-done':s.prepStatus==='in-progress'?'sp-prog':'sp-none'}" onclick="cycleP(${si})">${s.prepStatus==='completed'?'✓ Completed':s.prepStatus==='in-progress'?'⟳ In progress':'○ Not started'}</div>${s.prepStatus==='completed'&&nextSd?`<div class="ul-note">↓ ${nextSd.name} available</div>`:''}</td></tr>`;
+    });
+  });
+  if(!mS.length)html+=`<tr><td colspan="8" style="text-align:center;color:var(--text-3);padding:18px;">No styles for this month.</td></tr>`;
+  html+=`</tbody></table></div></div>`;mc.innerHTML=html;
+}
+
+// ── T3 ──
+function renderT3(mc,sd){
+  const dep=SUBS.find(s=>s.id===sd.dependsOn);const mS=STYLES.filter(s=>s.month===activeMonth);
+  const today=new Date().toLocaleDateString('en-US',{month:'short',day:'numeric'});const isMon=T3_LIST.some(x=>x.id===sd.id);
+  let html=`<div class="content"><div class="month-nav">${MONTHS.map((m,i)=>`<div class="mnt${i===activeMonth?' active':''}" onclick="setMonth(${i})">${m}</div>`).join('')}</div>
+  <div class="sbar"><span style="font-weight:500;color:var(--text);">${MONTHS[activeMonth]} — ${mS.length} styles</span><span style="color:var(--text-3);font-size:12px;">Today ${today} · qty capped by ${dep?.name||'prev'}</span></div>
+  <div class="tblw"><table class="bt"><thead><tr><th>Style</th><th>Buyer</th><th class="cc">Colours</th><th class="qc">Order qty</th><th>Enter ${sd.recordLabel} today</th><th>${dep?.name} done</th><th>My total</th><th>Remaining</th>${isMon?'<th class="mth">📋 Monitor</th>':''}</tr></thead><tbody>`;
+  WEEKS.forEach((wl,wi)=>{const ws=mS.filter(s=>s.week===wi);if(!ws.length)return;
+    html+=`<tr class="wgh"><td colspan="${isMon?9:8}">📅 ${wl}</td></tr>`;
+    ws.forEach(s=>{const si=STYLES.indexOf(s);const oQ=tQty(s);const depDone=gDepDone(sd,s);const log=s[gLog(sd)]||[];const myT=gTotal(log);const canE=Math.max(0,depDone-myT);const rem=Math.max(0,oQ-myT);const pct=oQ>0?Math.min(100,Math.round(myT/oQ*100)):0;const cH=s.colours.map(cv=>`<div style="font-size:12px;margin-bottom:1px;">${cv.name} — <strong>${cv.qty.toLocaleString()}</strong> pcs</div>`).join('');const mon=s.monitor;const isM=mon&&mon.subId===sd.id;
+      html+=`<tr><td><span class="sc">${s.code}</span></td><td>${s.buyer}</td><td class="cc">${cH}</td><td class="qc" style="font-weight:600;color:var(--brand);">${oQ.toLocaleString()}</td>
+        <td><div class="qcell"><div class="qline"><input class="qi${canE<=0?' warn':''}" id="q-${sd.id}-${si}" type="number" min="0" max="${canE}" placeholder="${canE>0?'0':'-'}" ${canE<=0?'disabled':''} onkeydown="if(event.key==='Enter')saveQ('${sd.id}',${si})" oninput="valQ(this,${canE})"/><button class="sq" ${canE<=0?'disabled':''} onclick="saveQ('${sd.id}',${si})">Save</button></div>${canE>0?`<div class="qa">Max ${canE.toLocaleString()} pcs</div>`:myT>=oQ?`<div class="qa">✓ Complete</div>`:`<div class="ql">Waiting for ${dep?.name}</div>`}</div></td>
+        <td><div style="font-weight:500;color:${depDone>0?'var(--brand)':'var(--text-3)'};">${depDone.toLocaleString()}</div><div style="font-size:10px;color:var(--text-3);">of ${oQ.toLocaleString()}</div></td>
+        <td><div style="font-weight:500;color:${myT>0?'var(--brand)':'var(--text-3)'};">${myT.toLocaleString()}</div><div style="font-size:10px;color:var(--text-3);">${pct}%</div><div class="pb"><div class="pf" style="width:${pct}%;"></div></div></td>
+        <td><span style="font-weight:500;color:${rem===0?'var(--brand)':'var(--amber)'};">${rem===0?'✓ Done':rem.toLocaleString()+' pcs'}</span></td>
+        ${isMon?`<td class="mtd">${isM?`<div style="font-size:11px;font-weight:600;color:#0C447C;">${mon.startDate} → ${mon.finishDate}</div><div style="font-size:10px;color:#5B8FBF;">Target: ${mon.dailyTarget} pcs/day</div>`:'—'}</td>`:''}</tr>`;
+    });
+  });
+  if(!mS.length)html+=`<tr><td colspan="${isMon?9:8}" style="text-align:center;color:var(--text-3);padding:18px;">No styles.</td></tr>`;
+  html+=`</tbody></table></div></div>`;mc.innerHTML=html;
+}
+
+// ── DAILY LOG ──
+function renderDailyLog(mc,sd){
+  const mS=STYLES.filter(s=>s.month===activeMonth);const lk=gLog(sd);const mDays=getMonthDays(activeMonth);const tdCol=activeMonth===0?5:null;
+  let total=0;const dSet=new Set();let started=0;
+  mS.forEach(s=>{const log=s[lk]||[];log.forEach(e=>{total+=e.qty;dSet.add(e.day);});if(log.length>0)started++;});
+  const workDays=mDays.filter(d=>!d.isSunday).length;
+  let html=`<div class="content"><div class="month-nav">${MONTHS.map((m,i)=>`<div class="mnt${i===activeMonth?' active':''}" onclick="setMonthLog(${i})">${m}</div>`).join('')}</div>
+  <div class="lgw">
+    <div class="lgs">
+      <div class="sc2"><div class="sn">${total.toLocaleString()}</div><div class="sl">Total ${sd.recordLabel}</div><div class="ss">${MONTHS[activeMonth]}</div></div>
+      <div class="sc2"><div class="sn">${dSet.size}</div><div class="sl">Days with input</div><div class="ss">of ${workDays} working days</div></div>
+      <div class="sc2"><div class="sn">${started}</div><div class="sl">Styles active</div><div class="ss">of ${mS.length} total</div></div>
+      <div class="sc2"><div class="sn">${dSet.size>0?Math.round(total/dSet.size).toLocaleString():0}</div><div class="sl">Avg per active day</div><div class="ss">all styles combined</div></div>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;font-size:11px;color:var(--text-3);">
+      <span style="display:inline-flex;align-items:center;gap:4px;"><span style="width:12px;height:12px;background:#f5f5f5;border:1px solid #e0e0e0;border-radius:2px;display:inline-block;"></span>Sunday</span>
+      <span style="display:inline-flex;align-items:center;gap:4px;"><span style="width:12px;height:12px;background:#EBF2FF;border:1px solid var(--bb);border-radius:2px;display:inline-block;"></span>Today</span>
+    </div>
+    <div class="go"><div class="gscr"><table class="lg">
+      <thead>
+        <tr><th class="sc3">Style</th><th class="byc">Buyer</th>${mDays.map(d=>`<th class="${d.isSunday?'sunc':d.day===tdCol?'tdc':''}">${d.day}</th>`).join('')}<th class="totc">Total</th></tr>
+        <tr><th class="sc3" style="font-size:8px;padding:2px 5px;"></th><th class="byc" style="font-size:8px;"></th>${mDays.map(d=>`<th class="dname ${d.isSunday?'sunc':d.day===tdCol?'tdc':''}">${d.isSunday?'☀':''}${d.dayName}</th>`).join('')}<th class="totc" style="font-size:8px;"></th></tr>
+      </thead><tbody>`;
+  if(!mS.length){html+=`<tr><td class="sc3" colspan="${mDays.length+3}" style="text-align:center;color:var(--text-3);padding:20px;">No styles for this month.</td></tr>`;}
+  else{mS.forEach(s=>{const log=s[lk]||[];const qM={};log.forEach(e=>{qM[e.day]=(qM[e.day]||0)+e.qty;});const sT=log.reduce((a,b)=>a+b.qty,0);const mon=s.monitor;const isM=mon&&mon.subId===sd.id;
+    html+=`<tr><td class="sc3">${s.code}${isM?`<span style="display:inline-flex;align-items:center;gap:2px;padding:1px 4px;background:var(--blue);color:#fff;border-radius:2px;font-size:8px;font-weight:700;margin-left:3px;vertical-align:middle;">MON</span>`:''}</td><td class="byc">${s.buyer}</td>
+      ${mDays.map(d=>{if(d.isSunday)return`<td class="sunc">—</td>`;const q=qM[d.day];const iT=d.day===tdCol;return`<td class="${iT?'tdc':''}${q?' hq':''}">${q?q.toLocaleString():'—'}</td>`;}).join('')}
+      <td class="totc">${sT.toLocaleString()}</td></tr>`;
+  });}
+  const gT=mS.reduce((a,s)=>{const log=s[lk]||[];return a+log.reduce((b,e)=>b+e.qty,0);},0);
+  html+=`</tbody><tfoot><tr><td class="sc3">Daily total</td><td class="byc"></td>
+    ${mDays.map(d=>{if(d.isSunday)return`<td class="sunc">—</td>`;const dT=mS.reduce((a,s)=>{const log=s[lk]||[];const e=log.find(x=>x.day===d.day);return a+(e?e.qty:0);},0);const iT=d.day===tdCol;return`<td class="${iT?'tdc':''}" style="color:${dT>0?'var(--brand)':'var(--text-3)'};">${dT>0?dT.toLocaleString():'—'}</td>`;}).join('')}
+    <td class="totc">${gT.toLocaleString()}</td></tr></tfoot>
+    </table></div>
+    ${mS.length>0?`<div class="cstrip">${mS.map(s=>{const log=s[lk]||[];const t=log.reduce((a,b)=>a+b.qty,0);const oQ=tQty(s);const p=oQ>0?Math.min(100,Math.round(t/oQ*100)):0;return`<div class="crow"><div class="cc2">${s.code}</div><div class="cbw"><div class="cbf" style="width:${p}%;"></div></div><div class="cp">${p}%</div><div class="cn2">${t.toLocaleString()} / ${oQ.toLocaleString()} pcs</div></div>`;}).join('')}</div>`:''}
+    </div></div></div>`;mc.innerHTML=html;
+}
+
+// ── ALL STYLES ──
+function renderAllStyles(mc,sd){
+  const mS=STYLES.filter(s=>s.month===activeMonth);const cC=9+(sd.type>=3?1:0)+4;
+  let html=`<div class="content"><div class="month-nav">${MONTHS.map((m,i)=>`<div class="mnt${i===activeMonth?' active':''}" onclick="setMonthStyles(${i})">${m}</div>`).join('')}</div>
+  <div class="tblw"><table class="bt"><thead><tr><th>Style</th><th>Buyer</th><th>Fabric</th><th class="cc">Colours</th><th class="qc">Total qty</th><th>Ship</th><th>Prep</th>${sd.type>=3?`<th>${sd.name}</th>`:''}<th class="mth">Monitor</th><th class="mth">Plan start</th><th class="mth">Plan finish</th><th class="mth">Daily target</th><th style="width:90px;">Actions</th></tr></thead><tbody>`;
+  WEEKS.forEach((wl,wi)=>{const ws=mS.filter(s=>s.week===wi);if(!ws.length)return;
+    html+=`<tr class="wgh"><td colspan="${cC}">📅 ${wl} — ${ws.length} style${ws.length!==1?'s':''}</td></tr>`;
+    ws.forEach(s=>{const si=STYLES.indexOf(s);const myS=sd.statusKey?s[sd.statusKey]:'';const mon=s.monitor;const mSub=T3_LIST.find(x=>x.id===mon?.subId);
+      html+=`<tr>
+        <td><span class="sc">${s.code}</span></td><td>${s.buyer}</td><td>${s.fabric}</td>
+        <td class="cc">${s.colours.map(cv=>`<div style="font-size:12px;margin-bottom:1px;">${cv.name} ${cv.qty.toLocaleString()}</div>`).join('')}</td>
+        <td class="qc" style="font-weight:600;color:var(--brand);">${tQty(s).toLocaleString()}</td>
+        <td>${s.shipDate}</td>
+        <td><div class="sp ${s.prepStatus==='completed'?'sp-done':s.prepStatus==='in-progress'?'sp-prog':'sp-none'}">${s.prepStatus==='completed'?'✓':s.prepStatus==='in-progress'?'⟳':'○'}</div></td>
+        ${sd.type>=3?`<td><div class="sp ${myS==='completed'?'sp-done':myS==='in-progress'?'sp-prog':'sp-none'}">${myS==='completed'?'✓':myS==='in-progress'?'⟳':'○'}</div></td>`:''}
+        <td class="mtd">${mSub?`<span style="padding:2px 7px;background:var(--blue);color:#fff;border-radius:4px;font-size:11px;font-weight:600;">${mSub.name}</span>`:'—'}</td>
+        <td class="mtd" style="font-size:12px;font-weight:500;color:#0C447C;">${mon?.startDate||'—'}</td>
+        <td class="mtd" style="font-size:12px;font-weight:500;color:#0C447C;">${mon?.finishDate||'—'}</td>
+        <td class="mtd" style="font-size:12px;font-weight:600;color:#0C447C;">${mon?.dailyTarget?mon.dailyTarget+' pcs/day':'—'}</td>
+        <td style="white-space:nowrap;">
+          <button onclick="editStyleModal(${si})" style="padding:3px 9px;border:1px solid var(--border);border-radius:5px;font-size:11px;color:var(--text-2);background:var(--surface);cursor:pointer;font-family:inherit;margin-right:4px;" onmouseenter="this.style.borderColor='var(--brand)';this.style.color='var(--brand)'" onmouseleave="this.style.borderColor='var(--border)';this.style.color='var(--text-2)'">Edit</button>
+          <button onclick="deleteStyleConfirm(${si})" style="padding:3px 9px;border:1px solid var(--border);border-radius:5px;font-size:11px;color:var(--err);background:var(--surface);cursor:pointer;font-family:inherit;" onmouseenter="this.style.borderColor='var(--err)'" onmouseleave="this.style.borderColor='var(--border)'">Delete</button>
+        </td>
+      </tr>`;
+    });
+  });
+  if(!mS.length)html+=`<tr><td colspan="${cC}" style="text-align:center;color:var(--text-3);padding:16px;">No styles.</td></tr>`;
+  html+=`</tbody></table></div></div>`;mc.innerHTML=html;
+}
+
+// ── STYLE EDIT / DELETE ──
+function editStyleModal(si){
+  const s=STYLES[si];if(!s)return;
+  const t3Opts=T3_LIST.map(t=>`<option value="${t.id}"${s.monitor?.subId===t.id?' selected':''}>${t.name}</option>`).join('');
+  const colRows=s.colours.map((c,i)=>`
+    <div style="display:grid;grid-template-columns:1fr 90px auto;gap:8px;align-items:center;margin-bottom:6px;">
+      <input id="ec-name-${i}" value="${c.name}" placeholder="Colour name" style="padding:6px 9px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit;color:var(--text);outline:none;"/>
+      <input id="ec-qty-${i}" type="number" value="${c.qty}" min="0" style="padding:6px 9px;border:1.5px solid var(--border);border-radius:6px;font-size:13px;font-family:inherit;color:var(--text);outline:none;text-align:right;"/>
+      <span style="font-size:11px;color:var(--text-3);">pcs</span>
+    </div>`).join('');
+
+  // Convert stored date strings back to yyyy-mm-dd for date inputs
+  function toInputDate(str){
+    if(!str||str==='-')return '';
+    try{return new Date(str+' 2025').toISOString().split('T')[0];}catch{return '';}
+  }
+
+  showModalHTML(`<h3 style="margin-bottom:4px;">Edit style</h3>
+    <p style="font-size:12px;color:var(--text-3);margin-bottom:14px;">Changes apply immediately across all views.</p>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+      <div>
+        <label style="display:block;font-size:10px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;">Style code *</label>
+        <input id="es-code" value="${s.code}" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-size:13px;font-family:inherit;color:var(--text);outline:none;" onfocus="this.style.borderColor='var(--brand)'" onblur="this.style.borderColor='var(--border)'"/>
+      </div>
+      <div>
+        <label style="display:block;font-size:10px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;">Buyer *</label>
+        <input id="es-buyer" value="${s.buyer}" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-size:13px;font-family:inherit;color:var(--text);outline:none;" onfocus="this.style.borderColor='var(--brand)'" onblur="this.style.borderColor='var(--border)'"/>
+      </div>
+      <div>
+        <label style="display:block;font-size:10px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;">Fabric arrival</label>
+        <input id="es-fabric" type="date" value="${toInputDate(s.fabric)}" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-size:13px;font-family:inherit;color:var(--text);outline:none;"/>
+      </div>
+      <div>
+        <label style="display:block;font-size:10px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;">Accessories</label>
+        <input id="es-acc" type="date" value="${toInputDate(s.accessories)}" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-size:13px;font-family:inherit;color:var(--text);outline:none;"/>
+      </div>
+      <div>
+        <label style="display:block;font-size:10px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;">Shipment date</label>
+        <input id="es-ship" type="date" value="${toInputDate(s.shipDate)}" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-size:13px;font-family:inherit;color:var(--text);outline:none;"/>
+      </div>
+      <div>
+        <label style="display:block;font-size:10px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;">Week</label>
+        <select id="es-week" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-size:13px;font-family:inherit;color:var(--text);outline:none;">
+          ${WEEKS.map((w,i)=>`<option value="${i}"${s.wk===i||s.week===i?' selected':''}>${w}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+
+    <div style="background:#EBF2FF;border:1.5px solid #A8C3E8;border-radius:9px;padding:10px 12px;margin-bottom:12px;">
+      <div style="font-size:11px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">🔵 Monitor</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+        <div>
+          <label style="display:block;font-size:10px;font-weight:600;color:var(--blue);text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px;">Track dept</label>
+          <select id="es-mon-sub" style="width:100%;padding:6px 9px;border:1.5px solid #A8C3E8;border-radius:6px;font-size:13px;font-family:inherit;color:var(--text);outline:none;">${t3Opts}</select>
+        </div>
+        <div>
+          <label style="display:block;font-size:10px;font-weight:600;color:var(--blue);text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px;">Planned start</label>
+          <input id="es-mon-start" type="date" value="${toInputDate(s.monitor?.startDate)}" style="width:100%;padding:6px 9px;border:1.5px solid #A8C3E8;border-radius:6px;font-size:13px;font-family:inherit;color:var(--text);outline:none;"/>
+        </div>
+        <div>
+          <label style="display:block;font-size:10px;font-weight:600;color:var(--blue);text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px;">Planned finish</label>
+          <input id="es-mon-fin" type="date" value="${toInputDate(s.monitor?.finishDate)}" style="width:100%;padding:6px 9px;border:1.5px solid #A8C3E8;border-radius:6px;font-size:13px;font-family:inherit;color:var(--text);outline:none;"/>
+        </div>
+        <div style="grid-column:1/-1;">
+          <label style="display:block;font-size:10px;font-weight:600;color:var(--blue);text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px;">Daily target (pcs)</label>
+          <input id="es-mon-tgt" type="number" value="${s.monitor?.dailyTarget||''}" placeholder="e.g. 150" style="width:140px;padding:6px 9px;border:1.5px solid #A8C3E8;border-radius:6px;font-size:13px;font-family:inherit;color:var(--text);outline:none;"/>
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-bottom:4px;">
+      <div style="font-size:10px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">Colours & quantities</div>
+      <div id="es-colours">${colRows}</div>
+    </div>
+
+    <div class="modal-btns">
+      <button class="mbb" style="color:var(--error);border-color:var(--error);" onclick="deleteStyleConfirm(${si})">Delete</button>
+      <button class="mbb" onclick="closeModal()">Cancel</button>
+      <button class="mbb prim" onclick="saveStyle(${si})">Save changes</button>
+    </div>`);
+}
+
+function saveStyle(si){
+  const s=STYLES[si];if(!s)return;
+
+  // ── Collect values ──
+  const code=document.getElementById('es-code')?.value.trim();
+  const buyer=document.getElementById('es-buyer')?.value.trim();
+  if(!code||!buyer){showValidationError('Style code and buyer are required.');return;}
+
+  const fabricRaw=document.getElementById('es-fabric')?.value;
+  const accRaw=document.getElementById('es-acc')?.value;
+  const shipRaw=document.getElementById('es-ship')?.value;
+  const monStartRaw=document.getElementById('es-mon-start')?.value;
+  const monFinRaw=document.getElementById('es-mon-fin')?.value;
+
+  // Parse to Date objects for comparison (keep nulls for unset)
+  const toDate=raw=>raw?new Date(raw):null;
+  const dFab=toDate(fabricRaw);
+  const dAcc=toDate(accRaw);
+  const dShip=toDate(shipRaw);
+  const dMonStart=toDate(monStartRaw);
+  const dMonFin=toDate(monFinRaw);
+
+  // ── Date ordering validation ──
+  const errors=[];
+
+  if(dFab&&dAcc&&dFab>dAcc)
+    errors.push('Fabric arrival must be on or before accessories date.');
+
+  if(dAcc&&dShip&&dAcc>dShip)
+    errors.push('Accessories date must be on or before shipment date.');
+
+  if(dFab&&dShip&&dFab>dShip)
+    errors.push('Fabric arrival must be before shipment date.');
+
+  if(dMonStart&&dFab&&dMonStart<dFab)
+    errors.push('Monitor planned start cannot be before fabric arrival.');
+
+  if(dMonFin&&dShip&&dMonFin>dShip)
+    errors.push('Monitor planned finish cannot be after shipment date.');
+
+  if(dMonStart&&dMonFin&&dMonStart>dMonFin)
+    errors.push('Monitor planned start must be before planned finish.');
+
+  if(errors.length){showValidationError(errors.join('\n'));return;}
+
+  // ── Collect new colour quantities ──
+  const newColours=[...s.colours];
+  const colContainers=document.querySelectorAll('#es-colours > div');
+  colContainers.forEach((row,i)=>{
+    if(!newColours[i])return;
+    const nameInp=document.getElementById(`ec-name-${i}`);
+    const qtyInp=document.getElementById(`ec-qty-${i}`);
+    if(nameInp)newColours[i]={...newColours[i],name:nameInp.value.trim()||newColours[i].name};
+    if(qtyInp)newColours[i]={...newColours[i],qty:parseInt(qtyInp.value)||newColours[i].qty};
+  });
+  const oldTotal=tQty(s);
+  const newTotal=newColours.reduce((a,c)=>a+c.qty,0);
+  const qtyChanged=oldTotal!==newTotal;
+
+  // ── Apply all changes ──
+  s.code=code;
+  s.buyer=buyer;
+  if(fabricRaw)s.fabric=fmtD(fabricRaw);
+  if(accRaw)s.accessories=fmtD(accRaw);
+  if(shipRaw)s.shipDate=fmtD(shipRaw);
+  const wkVal=parseInt(document.getElementById('es-week')?.value);
+  if(!isNaN(wkVal)){s.week=wkVal;s.wk=wkVal;}
+
+  // Monitor
+  if(!s.monitor)s.monitor={};
+  s.monitor.subId=document.getElementById('es-mon-sub')?.value||s.monitor.subId;
+  if(monStartRaw)s.monitor.startDate=fmtD(monStartRaw);
+  if(monFinRaw)s.monitor.finishDate=fmtD(monFinRaw);
+  s.monitor.dailyTarget=parseInt(document.getElementById('es-mon-tgt')?.value)||s.monitor.dailyTarget||0;
+
+  // Apply colours
+  s.colours=newColours;
+
+  // ── Recalculate downstream when qty changes ──
+  if(qtyChanged){
+    const newQty=tQty(s);
+    // Preparation: if completed, prepDone = new total
+    if(s.prepStatus==='completed')s.prepDone=newQty;
+
+    // For each T3 sub-dept: recalculate status based on new total qty
+    SUBS.filter(sd=>sd.type===3&&sd.statusKey).forEach(sd=>{
+      const logKey=gLog(sd);
+      const produced=gTotal(s[logKey]);
+      if(produced===0)s[sd.statusKey]='not-started';
+      else if(produced>=newQty)s[sd.statusKey]='completed';
+      else s[sd.statusKey]='in-progress';
+    });
+  }
+
+  // ── If shipment date changed, recalculate daily target suggestion ──
+  // (keep target as-is — user controls it — but warn if monitor finish now exceeds ship date)
+  const notes=[];
+  if(shipRaw&&dShip&&dMonFin&&dMonFin>dShip){
+    // Already caught above — won't reach here
+  }
+  if(qtyChanged){
+    notes.push(`Qty changed ${oldTotal.toLocaleString()} → ${newTotal.toLocaleString()} pcs. Production statuses recalculated.`);
+  }
+
+  closeModal();
+
+  // Re-render current view
+  const mc=document.getElementById('mc');
+  const sd=SUBS.find(x=>x.id===currentView?.id);
+  if(activeTab==='styles'&&sd)renderAllStyles(mc,sd);
+  else if(activeTab==='input'&&sd?.type===1)renderT1(mc);
+  else if(sd)renderContent();
+
+  showToast(notes.length?`${s.code} saved — ${notes[0]}`:`${s.code} updated`);
+}
+
+function showValidationError(msg){
+  // Show error inline in modal without closing it
+  let errEl=document.getElementById('modal-validation-err');
+  if(!errEl){
+    errEl=document.createElement('div');
+    errEl.id='modal-validation-err';
+    errEl.style.cssText='margin-bottom:12px;padding:10px 13px;background:#FEF0EB;border:1.5px solid var(--error);border-radius:8px;font-size:12px;color:var(--error);line-height:1.6;white-space:pre-line;';
+    // Insert before the modal-btns
+    const btns=document.querySelector('#modal-body .modal-btns');
+    if(btns)btns.parentNode.insertBefore(errEl,btns);
+    else document.getElementById('modal-body')?.appendChild(errEl);
+  }
+  errEl.textContent=msg;
+  errEl.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function deleteStyleConfirm(si){
+  const s=STYLES[si];if(!s)return;
+  showModalHTML(`<h3 style="margin-bottom:8px;">Delete ${s.code}?</h3>
+    <p style="font-size:13px;color:var(--text-2);margin-bottom:6px;line-height:1.55;">${s.buyer} · ${tQty(s).toLocaleString()} pcs · Ship ${s.shipDate}</p>
+    <p style="font-size:12px;color:var(--error);margin-bottom:16px;">All production data (prep, sewing, QC, packing logs) will be permanently removed.</p>
+    <div class="modal-btns">
+      <button class="mbb" onclick="editStyleModal(${si})">Back</button>
+      <button class="mbb" style="background:var(--error);color:#fff;border-color:var(--error);" onclick="doDeleteStyle(${si})">Yes, delete</button>
+    </div>`);
+}
+
+function doDeleteStyle(si){
+  const s=STYLES[si];if(!s)return;
+  const code=s.code;
+  STYLES.splice(si,1);
+  closeModal();
+  const mc=document.getElementById('mc');
+  const sd=SUBS.find(x=>x.id===currentView?.id);
+  if(activeTab==='styles'&&sd)renderAllStyles(mc,sd);
+  else if(activeTab==='input'&&sd?.type===1)renderT1(mc);
+  else if(sd)renderContent();
+  showToast(`${code} deleted`);
+}
+
+// ── MEMBERS ──
+function renderMembers(mc,sd){
+  const ppl=[{av:'SC',bg:'#2456A4',tc:'#fff',n:'Sarah Chen',r:'Admin',o:true},{av:'JO',bg:'#FAECE7',tc:'#712B13',n:'James Obi',r:`${sd.name} Head`,o:true},{av:'AK',bg:'#E6F1FB',tc:'#0C447C',n:'Ama Kofi',r:'Operator',o:false}];
+  mc.innerHTML=`<div class="members-panel"><div class="members-list">
+    ${ppl.map(m=>`<div class="member-row">
+      <div class="member-av" style="background:${m.bg};color:${m.tc};">${m.av}</div>
+      <div class="member-info"><div class="member-name">${m.n}</div><div class="member-role">${m.r}</div></div>
+      <div class="member-online" style="background:${m.o?'var(--brand2)':'var(--border)'}"></div>
+    </div>`).join('')}
+    <button style="width:100%;padding:8px;border:1px dashed var(--border);border-radius:8px;font-size:13px;color:var(--brand);background:transparent;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;" onclick="showToast('Invite member')">+ Add member</button>
+  </div></div>`;
+}
+
+// ── STATUS HANDLERS ──
+function setPSt(si,status){const s=STYLES[si];s.prepStatus=status;if(status==='completed')s.prepDone=tQty(s);else if(status==='not-started')s.prepDone=0;const next=SUBS[SUBS.findIndex(sd=>sd.id===currentView.id)+1];if(status==='completed'&&next)showToast(`${s.code} → ${next.name} available`);else showToast(`${s.code} → ${status.replace(/-/g,' ')}`);renderT2(document.getElementById('mc'));}
+function cycleP(si){const c=['not-started','in-progress','completed'];const s=STYLES[si];s.prepStatus=c[(c.indexOf(s.prepStatus)+1)%3];if(s.prepStatus==='completed')s.prepDone=tQty(s);else if(s.prepStatus==='not-started')s.prepDone=0;renderT2(document.getElementById('mc'));}
+function valQ(inp,max){const v=parseInt(inp.value)||0;if(v>max){inp.value=max;inp.classList.add('warn');}else inp.classList.remove('warn');}
+function saveQ(sdId,si){
+  const sd=SUBS.find(s=>s.id===sdId);const s=STYLES[si];const inp=document.getElementById(`q-${sdId}-${si}`);const val=parseInt(inp?.value)||0;if(val<=0){showToast('Enter qty > 0');return;}
+  const depDone=gDepDone(sd,s);const log=s[gLog(sd)]||[];const myT=gTotal(log);const canE=depDone-myT;if(val>canE){showToast(`Max: ${canE} pcs`);return;}
+  if(!s[gLog(sd)])s[gLog(sd)]=[];const today=new Date().getDate();const te=s[gLog(sd)].find(e=>e.day===today);if(te)te.qty+=val;else s[gLog(sd)].push({day:today,qty:val});
+  const nT=gTotal(s[gLog(sd)]);s[gDone(sd)]=nT;const oQ=tQty(s);if(nT>=oQ){s[sd.statusKey]='completed';}else if(nT>0){s[sd.statusKey]='in-progress';}
+  const next=SUBS[SUBS.findIndex(s2=>s2.id===sdId)+1];showToast(`Saved ${val} ${sd.recordLabel} for ${s.code}${nT>=oQ&&next?` → ${next.name} available`:''}`);if(inp)inp.value='';
+  renderT3(document.getElementById('mc'),sd);
+}
+
+// ── MONTH/WEEK NAV ──
+function setMonth(i){activeMonth=i;renderContent();}
+function setWeek(i){activeWeek=i;const sd=SUBS.find(s=>s.id===currentView?.id);if(sd?.type===1)renderT1(document.getElementById('mc'));}
+function setMonthLog(i){activeMonth=i;const sd=SUBS.find(s=>s.id===currentView?.id);renderDailyLog(document.getElementById('mc'),sd);}
+function setMonthStyles(i){activeMonth=i;const sd=SUBS.find(s=>s.id===currentView?.id);renderAllStyles(document.getElementById('mc'),sd);}
+
+// ── SEARCH ──
+function handleSearch(v){
+  if(!v){renderSidebar();return;}
+  const lv=v.toLowerCase();
+  // filter subs
+  const sl=document.getElementById('subs-list');sl.innerHTML='';
+  SUBS.filter(s=>s.name.toLowerCase().includes(lv)).forEach(sd=>{
+    const div=document.createElement('div');div.className='subdept-row'+(currentView?.type==='subdept'&&currentView.id===sd.id?' active':'');div.onclick=()=>openSub(sd.id);
+    div.innerHTML=`<div class="drag-grip" style="opacity:0;pointer-events:none;"><span></span><span></span><span></span></div><div class="subdept-dot" style="background:${sd.color};"></div><span class="subdept-lbl">${sd.name}</span><span class="subdept-tt tt-${sd.type}">T${sd.type}</span>`;
+    sl.appendChild(div);
+  });
+  const gl=document.getElementById('groups-list');gl.innerHTML='';
+  GROUPS.filter(g=>g.name.toLowerCase().includes(lv)).forEach(g=>{
+    const div=document.createElement('div');div.className='sbi';div.onclick=()=>openGroup(g.id);
+    div.innerHTML=`<div class="sbi-icon" style="background:${g.color};color:${g.tc};">${g.emoji}</div><span class="sbi-lbl">${g.name}</span>`;
+    gl.appendChild(div);
+  });
+  const dl=document.getElementById('dms-list');dl.innerHTML='';
+  DMS.filter(d=>d.name.toLowerCase().includes(lv)).forEach(dm=>{
+    const div=document.createElement('div');div.className='sbi';div.onclick=()=>openDM(dm.id);
+    div.innerHTML=`<div class="sbi-av" style="background:${dm.bg};color:${dm.tc};">${dm.av}</div><span class="sbi-lbl">${dm.name}</span>`;
+    dl.appendChild(div);
+  });
+}
+
+// ── MODALS ──
+function openModal(type){
+  const ov=document.getElementById('overlay');const mb=document.getElementById('modal-body');ov.classList.remove('hidden');
+  if(type==='addSubdept'){
+    const sw=COLORS.map(c=>`<div class="cs${selColor===c?' sel':''}" style="background:${c}" onclick="pickColor('${c}',this)"></div>`).join('');
+    mb.innerHTML=`<h3>Add sub-department</h3><p>Create a new Operations sub-department.</p>
+    <div class="info-pill">ℹ️ Type 1 = planning, Type 2 = work/prep, Type 3 = daily qty with log.</div>
+    <label>Name</label><input id="sd-name" placeholder="e.g. Embroidery"/>
+    <label>Type</label><select onchange="showTH(this.value)"><option value="">Select type...</option><option value="1">T1 — Master planning</option><option value="2">T2 — Work / preparation</option><option value="3">T3 — Daily qty (with log)</option></select>
+    <div id="type-help" class="type-help"></div>
+    <label>Records label (T3 only)</label><input id="sd-record" placeholder="e.g. pcs embroidered"/>
+    <label>Colour</label><div class="cs-row">${sw}</div>
+    <div style="padding:10px 12px;background:var(--bg);border:1px solid var(--border);border-radius:8px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;gap:10px;">
+      <div>
+        <div style="font-size:13px;font-weight:600;color:var(--text);">🔒 Delete protection</div>
+        <div style="font-size:11px;color:var(--text-3);margin-top:2px;">Prevent this sub-department from being deleted</div>
+      </div>
+      <label style="position:relative;width:42px;height:24px;flex-shrink:0;cursor:pointer;margin:0;text-transform:none;letter-spacing:0;">
+        <input type="checkbox" id="sd-lock" style="opacity:0;width:0;height:0;position:absolute;" onchange="this.parentElement.querySelector('span:first-of-type').style.background=this.checked?'var(--brand)':'var(--border)';this.parentElement.querySelector('span:last-of-type').style.left=this.checked?'21px':'3px'"/>
+        <span style="position:absolute;inset:0;border-radius:12px;background:var(--border);transition:background .2s;"></span>
+        <span style="position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:left .2s;box-shadow:0 1px 4px rgba(0,0,0,0.2);pointer-events:none;"></span>
+      </label>
+    </div>
+    <div class="modal-btns"><button class="mbb" onclick="closeModal()">Cancel</button><button class="mbb prim" onclick="addSubdept()">Create</button></div>`;
+  }
+  else if(type==='newGroup'){
+    const sw=COLORS.map(c=>`<div class="cs${selColor===c?' sel':''}" style="background:${c}" onclick="pickColor('${c}',this)"></div>`).join('');
+    const PLIST=[{av:'JO',name:'James Obi',role:'Operations Head',bg:'#FAECE7',tc:'#712B13'},{av:'AK',name:'Ama Kofi',role:'Sewing Lead',bg:'#E6F1FB',tc:'#0C447C'},{av:'RK',name:'Raj Kumar',role:'QC Head',bg:'#FAEEDA',tc:'#633806'},{av:'LB',name:'Lena Boateng',role:'Packing Lead',bg:'#EAF3DE',tc:'#27500A'},{av:'MB',name:'Mia Brown',role:'Accounts',bg:'#FAE8F5',tc:'#7B1A6A'},{av:'KS',name:'Kwame Sarfo',role:'HR',bg:'#E8F0FA',tc:'#1A4B7B'}];
+    mb.innerHTML=`<h3>Create group</h3><p>Groups are shared channels open to multiple team members.</p>
+    <label>Group name *</label><input id="gn-name" placeholder="e.g. Export team"/>
+    <label>Description</label><textarea id="gn-desc" placeholder="What is this group for?"></textarea>
+    <label>Emoji icon</label><input id="gn-emoji" placeholder="e.g. 🚀" maxlength="2" style="width:72px;font-size:20px;text-align:center;margin-bottom:10px;"/>
+    <label>Colour</label><div class="cs-row">${sw}</div>
+    <label>Add members</label>
+    <div id="member-picks" style="display:flex;flex-direction:column;gap:5px;margin-bottom:12px;">
+      ${PLIST.map(p=>`<label style="display:flex;align-items:center;gap:9px;cursor:pointer;padding:7px 10px;border:1px solid var(--border);border-radius:8px;margin:0;">
+        <input type="checkbox" value="${p.av}" style="width:auto;margin:0;cursor:pointer;"/>
+        <div style="width:24px;height:24px;border-radius:50%;background:${p.bg};color:${p.tc};display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;flex-shrink:0;">${p.av}</div>
+        <div style="flex:1;"><div style="font-size:13px;font-weight:500;color:var(--text);">${p.name}</div><div style="font-size:11px;color:var(--text-3);">${p.role}</div></div>
+      </label>`).join('')}
+    </div>
+    <div class="modal-btns"><button class="mbb" onclick="closeModal()">Cancel</button><button class="mbb prim" onclick="createGroup()">Create group</button></div>`;
+  }
+  else if(type==='newDM'){
+    const DMPEOPLE=Object.entries(ALL_PPL).filter(([k])=>k!=='SC').map(([av,p])=>({av,...p}));
+    mb.innerHTML=`<h3>New direct message</h3><p>Start a private conversation with a team member.</p>
+    <input id="dm-search" placeholder="🔍  Search by name..." oninput="filterDMPeople(this.value)" style="width:100%;padding:8px 11px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;color:var(--text);outline:none;margin-bottom:10px;background:var(--bg);"/>
+    <div id="dm-people">${DMPEOPLE.map(p=>`<div onclick="startDM('${p.av}','${p.name}','${p.role}','${p.bg}','${p.tc}')" style="display:flex;align-items:center;gap:10px;padding:9px 10px;cursor:pointer;border-radius:8px;border:1px solid var(--border);margin-bottom:5px;transition:all .15s;" onmouseenter="this.style.borderColor='var(--brand)';this.style.background='var(--bl)'" onmouseleave="this.style.borderColor='var(--border)';this.style.background=''">
+      <div style="width:30px;height:30px;border-radius:50%;background:${p.bg};color:${p.tc};display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0;">${p.av}</div>
+      <div style="flex:1;"><div style="font-size:13px;font-weight:600;color:var(--text);">${p.name}</div><div style="font-size:11px;color:var(--text-3);">${p.role}</div></div>
+      <span style="font-size:11px;color:var(--brand);font-weight:500;">Message →</span>
+    </div>`).join('')}</div>
+    <div class="modal-btns" style="margin-top:8px;"><button class="mbb" onclick="closeModal()">Cancel</button></div>`;
+  }
+}
+
+function filterDMPeople(v){
+  const ppl=document.querySelectorAll('#dm-people > div');
+  ppl.forEach(el=>{const name=el.querySelector('div > div:first-child').textContent.toLowerCase();el.style.display=name.includes(v.toLowerCase())?'':'none';});
+}
+
+function startDM(av,name,role,bg,tc){
+  closeModal();
+  // Check if DM already exists
+  const existing=DMS.find(d=>d.av===av&&!d.id.includes('_'));
+  if(existing){openDM(existing.id);return;}
+  const id='dm-'+av.toLowerCase();
+  if(!DMS.find(d=>d.id===id)){
+    DMS.push({id,name,av,bg,tc,role,online:false,unread:0});
+    if(!MSGS[id])MSGS[id]=[];
+  }
+  renderSidebar();openDM(id);
+}
+
+function showTH(v){const h=document.getElementById('type-help');if(!h)return;const m={'1':'Enters styles with dates, colours, and monitoring targets.','2':'Sets work/prep status per style. Unlocks T3 depts.','3':'Daily qty input with monthly calendar grid log.'};h.textContent=m[v]||'';}
+
+// ── EDIT / DELETE: SUB-DEPARTMENTS ──
+function editSubModal(id){
+  const sd=SUBS.find(s=>s.id===id);if(!sd)return;
+  const COLS=['#2456A4','#534AB7','#BA7517','#D85A30','#185FA5','#D4537E','#087A6B','#7C3AED'];
+  const sw=COLS.map(c=>`<div onclick="pickColor('${c}',this)" style="width:20px;height:20px;border-radius:50%;background:${c};cursor:pointer;border:2.5px solid ${c===sd.color?'var(--text)':'transparent'};transition:all .15s;flex-shrink:0;"></div>`).join('');
+  selColor=sd.color;
+  showModalHTML(`<h3 style="margin-bottom:4px;">Edit sub-department</h3>
+    <p style="font-size:12px;color:var(--text-3);margin-bottom:14px;">Type ${sd.type} · ${sd.label}</p>
+    <label>Name</label><input id="esub-name" value="${sd.name}"/>
+    <label>Colour</label><div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;">${sw}</div>
+    <div style="padding:10px 12px;background:${sd.locked?'#FEF9E7':'var(--bg)'};border:1px solid ${sd.locked?'#F5CBA7':'var(--border)'};border-radius:8px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;gap:10px;">
+      <div>
+        <div style="font-size:13px;font-weight:600;color:var(--text);">🔒 Delete protection</div>
+        <div style="font-size:11px;color:var(--text-3);margin-top:2px;">Prevents this sub-department from being deleted</div>
+      </div>
+      <label style="position:relative;width:42px;height:24px;flex-shrink:0;cursor:pointer;margin:0;text-transform:none;letter-spacing:0;">
+        <input type="checkbox" id="esub-lock" ${sd.locked?'checked':''} style="opacity:0;width:0;height:0;position:absolute;"/>
+        <span id="esub-lock-track" style="position:absolute;inset:0;border-radius:12px;background:${sd.locked?'var(--brand)':'var(--border)'};transition:background .2s;cursor:pointer;" onclick="toggleLockUI()"></span>
+        <span id="esub-lock-thumb" style="position:absolute;top:3px;left:${sd.locked?'21':'3'}px;width:18px;height:18px;border-radius:50%;background:#fff;transition:left .2s;box-shadow:0 1px 4px rgba(0,0,0,0.2);pointer-events:none;"></span>
+      </label>
+    </div>
+    <div class="modal-btns">
+      ${!sd.locked?`<button class="mbb" style="color:var(--error);border-color:var(--error);" onclick="deleteSubModal('${id}')">Delete</button>`:`<button class="mbb" disabled style="opacity:.4;cursor:not-allowed;" title="Unlock delete protection first">Delete</button>`}
+      <button class="mbb" onclick="closeModal()">Cancel</button>
+      <button class="mbb prim" onclick="doSaveSub('${id}')">Save changes</button>
+    </div>`);
+}
+
+function toggleLockUI(){
+  const cb=document.getElementById('esub-lock');
+  const track=document.getElementById('esub-lock-track');
+  const thumb=document.getElementById('esub-lock-thumb');
+  if(!cb||!track||!thumb)return;
+  cb.checked=!cb.checked;
+  track.style.background=cb.checked?'var(--brand)':'var(--border)';
+  thumb.style.left=cb.checked?'21px':'3px';
+}
+
+function doSaveSub(id){
+  const sd=SUBS.find(s=>s.id===id);if(!sd)return;
+  const name=document.getElementById('esub-name')?.value.trim();
+  if(name)sd.name=name;
+  sd.color=selColor;
+  const lockCb=document.getElementById('esub-lock');
+  if(lockCb)sd.locked=lockCb.checked;
+  closeModal();renderSidebar();
+  if(currentView?.type==='subdept'&&currentView.id===id){
+    setTopbar(sd.color,sd.name,`Type ${sd.type} · ${sd.label}`);
+  }
+  if(currentView?.type==='org')renderOrgPage(document.getElementById('mc'));
+  showToast(sd.name+' updated');
+}
+
+function deleteSubModal(id){
+  const sd=SUBS.find(s=>s.id===id);if(!sd)return;
+  if(sd.locked){showToast('Remove delete protection first');return;}
+  showModalHTML(`<h3 style="margin-bottom:8px;">Delete "${sd.name}"?</h3>
+    <p style="font-size:13px;color:var(--text-2);margin-bottom:6px;line-height:1.55;">This will permanently remove the sub-department and all its data from Operations.</p>
+    <p style="font-size:12px;color:var(--error);margin-bottom:16px;">This action cannot be undone.</p>
+    <div class="modal-btns">
+      <button class="mbb" onclick="editSubModal('${id}')">Back</button>
+      <button class="mbb" style="background:var(--error);color:#fff;border-color:var(--error);" onclick="doDeleteSub('${id}')">Yes, delete</button>
+    </div>`);
+}
+
+function doDeleteSub(id){
+  const idx=SUBS.findIndex(s=>s.id===id);if(idx===-1)return;
+  const name=SUBS[idx].name;
+  SUBS.splice(idx,1);
+  closeModal();
+  if(currentView?.type==='subdept'&&currentView.id===id){
+    currentView=null;
+    document.getElementById('mc').innerHTML=`<div class="welcome"><div class="w-icon">💬</div><div class="w-title">Sub-department deleted</div><div class="w-sub">Select another channel from the sidebar.</div></div>`;
+    document.getElementById('tb-right').innerHTML='';
+    document.getElementById('tabbar').classList.add('hidden');
+  }
+  renderSidebar();
+  if(currentView?.type==='org')renderOrgPage(document.getElementById('mc'));
+  showToast(name+' deleted');
+}
+
+// ── EDIT / DELETE: GROUPS ──
+function editGroupModal(id){
+  const g=GROUPS.find(x=>x.id===id);if(!g)return;
+  const COLS=['#1B3A6B','#C94B2C','#534AB7','#B87316','#1558A0','#D4537E','#087A6B','#7C3AED'];
+  selColor=g.tc||'#1B3A6B';
+  const sw=COLS.map(c=>`<div onclick="pickColor('${c}',this)" style="width:20px;height:20px;border-radius:50%;background:${c};cursor:pointer;border:2.5px solid ${c===selColor?'var(--text)':'transparent'};transition:all .15s;flex-shrink:0;"></div>`).join('');
+  showModalHTML(`<h3 style="margin-bottom:4px;">Edit group</h3>
+    <p style="font-size:12px;color:var(--text-3);margin-bottom:14px;">${g.members.length} members · ${g.emoji}</p>
+    <label>Group name</label><input id="eg-name" value="${g.name}"/>
+    <label>Description</label><textarea id="eg-desc" style="resize:none;height:58px;width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;color:var(--text);outline:none;margin-bottom:12px;">${g.desc}</textarea>
+    <label>Emoji</label><input id="eg-emoji" value="${g.emoji}" maxlength="2" style="width:60px;font-size:18px;text-align:center;"/>
+    <label>Accent colour</label><div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;">${sw}</div>
+    <div class="modal-btns">
+      <button class="mbb" style="color:var(--error);border-color:var(--error);" onclick="deleteGroupConfirm('${id}')">Delete group</button>
+      <button class="mbb" onclick="closeModal()">Cancel</button>
+      <button class="mbb prim" onclick="doSaveGroup('${id}')">Save changes</button>
+    </div>`);
+}
+
+function doSaveGroup(id){
+  const g=GROUPS.find(x=>x.id===id);if(!g)return;
+  const name=document.getElementById('eg-name')?.value.trim()||g.name;
+  const desc=document.getElementById('eg-desc')?.value.trim()||g.desc;
+  const emoji=document.getElementById('eg-emoji')?.value.trim()||g.emoji;
+  g.name=name;g.desc=desc;g.emoji=emoji;g.tc=selColor;g.color=selColor+'22';
+  closeModal();renderSidebar();
+  if(currentView?.type==='group'&&currentView.id===id)openGroup(id);
+  showToast(name+' updated');
+}
+
+function deleteGroupConfirm(id){
+  const g=GROUPS.find(x=>x.id===id);if(!g)return;
+  showModalHTML(`<h3 style="margin-bottom:8px;">Delete "${g.name}"?</h3>
+    <p style="font-size:13px;color:var(--text-2);margin-bottom:6px;line-height:1.55;">All messages in this group will be permanently removed.</p>
+    <p style="font-size:12px;color:var(--error);margin-bottom:16px;">This action cannot be undone.</p>
+    <div class="modal-btns">
+      <button class="mbb" onclick="editGroupModal('${id}')">Back</button>
+      <button class="mbb" style="background:var(--error);color:#fff;border-color:var(--error);" onclick="doDeleteGroup('${id}')">Yes, delete</button>
+    </div>`);
+}
+
+function doDeleteGroup(id){
+  const idx=GROUPS.findIndex(x=>x.id===id);if(idx===-1)return;
+  const name=GROUPS[idx].name;
+  GROUPS.splice(idx,1);delete MSGS[id];
+  closeModal();
+  if(currentView?.type==='group'&&currentView.id===id){
+    currentView=null;
+    document.getElementById('mc').innerHTML=`<div class="welcome"><div class="w-icon">💬</div><div class="w-title">Group deleted</div><div class="w-sub">Select another channel from the sidebar.</div></div>`;
+    document.getElementById('tb-right').innerHTML='';
+  }
+  renderSidebar();showToast(name+' deleted');
+}
+
+// ── EDIT / DELETE: DIRECT MESSAGES ──
+function editDMModal(id){
+  const dm=DMS.find(x=>x.id===id);if(!dm)return;
+  showModalHTML(`<h3 style="margin-bottom:4px;">Conversation with ${dm.name}</h3>
+    <div style="display:flex;align-items:center;gap:11px;padding:12px;background:var(--bg);border-radius:9px;border:1px solid var(--border);margin-bottom:14px;">
+      <div style="width:40px;height:40px;border-radius:50%;background:${dm.bg};color:${dm.tc};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;">${dm.av}</div>
+      <div>
+        <div style="font-size:14px;font-weight:600;color:var(--text);">${dm.name}</div>
+        <div style="font-size:11px;color:var(--text-3);">${dm.role}</div>
+        <div style="display:flex;align-items:center;gap:4px;margin-top:3px;">
+          <span style="width:6px;height:6px;border-radius:50%;background:${dm.online?'var(--brand2)':'var(--border)'};display:inline-block;"></span>
+          <span style="font-size:11px;color:var(--text-3);">${dm.online?'Active now':'Offline'}</span>
+        </div>
+      </div>
+    </div>
+    <div class="modal-btns">
+      <button class="mbb" style="color:var(--error);border-color:var(--error);" onclick="deleteDMConfirm('${id}')">Delete conversation</button>
+      <button class="mbb prim" onclick="closeModal()">Close</button>
+    </div>`);
+}
+
+function deleteDMConfirm(id){
+  const dm=DMS.find(x=>x.id===id);if(!dm)return;
+  showModalHTML(`<h3 style="margin-bottom:8px;">Delete conversation with ${dm.name}?</h3>
+    <p style="font-size:13px;color:var(--text-2);margin-bottom:6px;line-height:1.55;">All messages in this conversation will be permanently removed.</p>
+    <p style="font-size:12px;color:var(--error);margin-bottom:16px;">This action cannot be undone.</p>
+    <div class="modal-btns">
+      <button class="mbb" onclick="editDMModal('${id}')">Back</button>
+      <button class="mbb" style="background:var(--error);color:#fff;border-color:var(--error);" onclick="doDeleteDM('${id}')">Yes, delete</button>
+    </div>`);
+}
+
+function doDeleteDM(id){
+  const idx=DMS.findIndex(x=>x.id===id);if(idx===-1)return;
+  const name=DMS[idx].name;
+  DMS.splice(idx,1);delete MSGS[id];
+  closeModal();
+  if(currentView?.type==='dm'&&currentView.id===id){
+    currentView=null;
+    document.getElementById('mc').innerHTML=`<div class="welcome"><div class="w-icon">💬</div><div class="w-title">Conversation deleted</div><div class="w-sub">Select another channel from the sidebar.</div></div>`;
+    document.getElementById('tb-right').innerHTML='';
+  }
+  renderSidebar();showToast('Conversation with '+name+' deleted');
+}
+
+function addSubdept(){
+  const name=document.getElementById('sd-name')?.value.trim();const type=parseInt(document.querySelector('#modal-body select')?.value)||3;const record=document.getElementById('sd-record')?.value.trim()||'pcs processed';
+  if(!name){showToast('Enter a name');return;}
+  const locked=document.getElementById('sd-lock')?.checked||false;
+  const id='sub_'+Date.now();const dep=SUBS.filter(s=>s.type===3).pop()||SUBS.find(s=>s.type===2)||SUBS[0];
+  SUBS.push({id,name,type,color:selColor,label:`Daily qty — ${record}`,recordLabel:record,dependsOn:dep?.id,statusKey:id+'Status',unread:0,locked});
+  STYLES.forEach(s=>{s[id+'Status']='not-started';s[id+'Log']=[];});
+  closeModal();renderSidebar();showToast(`${name} created${locked?' (locked)':''}`);
+}
+
+function createGroup(){
+  const name=document.getElementById('gn-name')?.value.trim();const desc=document.getElementById('gn-desc')?.value.trim()||'';const emoji=document.getElementById('gn-emoji')?.value.trim()||'💬';
+  if(!name){showToast('Group name required');return;}
+  // get selected member checkboxes
+  const checked=Array.from(document.querySelectorAll('#member-picks input:checked')).map(c=>c.value);
+  const id='g-'+Date.now();
+  GROUPS.push({id,name,emoji,color:selColor+'22',tc:selColor,members:['SC',...checked],desc,unread:0});
+  if(!MSGS[id])MSGS[id]=[];
+  closeModal();renderSidebar();openGroup(id);showToast(`${emoji} #${name} created`);
+}
+
+function pickColor(c,el){selColor=c;document.querySelectorAll('.cs').forEach(s=>s.classList.remove('sel'));el.classList.add('sel');}
+
+function showModalHTML(html){
+  const ov=document.getElementById('overlay');const mb=document.getElementById('modal-body');ov.classList.remove('hidden');mb.innerHTML=html;
+}
+
+function closeModal(){document.getElementById('overlay').classList.add('hidden');}
+function closeOverlayClick(e){if(e.target===document.getElementById('overlay'))closeModal();}
+
+// ── INIT ──
+renderSidebar();
+</script>
+</body>
+</html>
