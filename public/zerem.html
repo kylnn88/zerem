@@ -2565,26 +2565,23 @@ async function saveStyle(si){
   const dMonStart=toDate(monStartRaw);
   const dMonFin=toDate(monFinRaw);
 
-  // ── Date ordering validation ──
+// ── Date ordering validation ──
   const errors=[];
 
-  if(dFab&&dAcc&&dFab>dAcc)
-    errors.push('Fabric arrival must be on or before accessories date.');
+  if(dFab&&dShip&&dFab>=dShip)
+    errors.push('Fabric arrival must be strictly before ship date.');
 
-  if(dAcc&&dShip&&dAcc>dShip)
-    errors.push('Accessories date must be on or before shipment date.');
+  if(dAcc&&dShip&&dAcc>=dShip)
+    errors.push('Accessories date must be strictly before ship date.');
 
-  if(dFab&&dShip&&dFab>dShip)
-    errors.push('Fabric arrival must be before shipment date.');
+  if(dMonStart&&dFab&&dMonStart<=dFab)
+    errors.push('Monitor start must be strictly after fabric arrival.');
 
-  if(dMonStart&&dFab&&dMonStart<dFab)
-    errors.push('Monitor planned start cannot be before fabric arrival.');
-
-  if(dMonFin&&dShip&&dMonFin>dShip)
-    errors.push('Monitor planned finish cannot be after shipment date.');
+  if(dMonFin&&dShip&&dMonFin>=dShip)
+    errors.push('Monitor finish must be strictly before ship date.');
 
   if(dMonStart&&dMonFin&&dMonStart>dMonFin)
-    errors.push('Monitor planned start must be before planned finish.');
+    errors.push('Monitor start must be before or equal to monitor finish.');
 
   if(errors.length){showValidationError(errors.join('\n'));return;}
 
