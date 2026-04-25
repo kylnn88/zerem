@@ -1077,7 +1077,7 @@ function openSettings(){
   renderSettingsPage(mc);
   // Load join requests if admin
   if(CURRENT_USER.role==='admin'){
-    loadJoinRequests();
+    setTimeout(loadJoinRequests, 100);
   }
 }
 
