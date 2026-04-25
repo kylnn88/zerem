@@ -535,7 +535,6 @@ async function loadDepartments() {
     
 updateUserUI();
 renderSidebar();
-setTimeout(loadDepartments, 500);
   } catch(e) {
     console.log('Using demo data', e);
     
@@ -1819,14 +1818,16 @@ function renderChatOnly(msgKey){
   setTimeout(()=>{const a=document.getElementById('msgs-area');if(a)a.scrollTop=a.scrollHeight;},40);
 }
 
-function renderMessages(mc,msgKey,channelName){
+async function renderMessages(mc,msgKey,channelName){
   mc.style.overflowY='hidden';
   mc.style.background='var(--surface)';
   if(!MSGS[msgKey])MSGS[msgKey]=[];
+
+  // Build the chat UI first
   mc.innerHTML=`<div class="chat-area">
     <div class="chat-msgs" id="msgs-area">
-      <div class="date-sep"><div class="date-line"></div><span class="date-lbl">Today · Jul 3, 2025</span><div class="date-line"></div></div>
-      ${MSGS[msgKey].map(m=>buildMsg(m)).join('')}
+      <div class="date-sep"><div class="date-line"></div><span class="date-lbl">Today · ${new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</span><div class="date-line"></div></div>
+      <div id="msgs-loading" style="text-align:center;padding:20px;color:var(--text-3);font-size:13px;">Loading messages...</div>
     </div>
     <div class="composer">
       <div class="comp-toolbar">
@@ -1844,7 +1845,60 @@ function renderMessages(mc,msgKey,channelName){
       </div>
     </div>
   </div>`;
-  setTimeout(()=>{const a=document.getElementById('msgs-area');if(a)a.scrollTop=a.scrollHeight;},40);
+
+  // Load messages from Supabase
+  if(CURRENT_USER.org_id&&CURRENT_USER.org_id!=='demo'){
+    try {
+      const msgs=await supaFetch('messages',{
+        select:'*&order=created_at.asc',
+        filters:[
+          {key:'org_id',value:CURRENT_USER.org_id},
+          {key:'channel_id',value:msgKey}
+        ]
+      });
+      const area=document.getElementById('msgs-area');
+      const loading=document.getElementById('msgs-loading');
+      if(loading)loading.remove();
+      if(area&&msgs&&msgs.length>0){
+        msgs.forEach(msg=>{
+          const isMe=msg.user_id===CURRENT_USER.id;
+          const m={
+            av:isMe?CURRENT_USER.initials:'?',
+            bg:isMe?'#2456A4':'#6B7280',
+            tc:'#fff',
+            name:isMe?CURRENT_USER.full_name:'Team member',
+            text:msg.content,
+            time:new Date(msg.created_at).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}),
+            mine:isMe
+          };
+          MSGS[msgKey].push(m);
+          const div=document.createElement('div');
+          div.innerHTML=buildMsg(m);
+          area.appendChild(div.firstElementChild||div);
+        });
+        area.scrollTop=area.scrollHeight;
+      } else {
+        if(loading)loading.remove();
+      }
+    } catch(e){
+      console.error('Load messages error',e);
+      const loading=document.getElementById('msgs-loading');
+      if(loading)loading.textContent='';
+    }
+  } else {
+    // Demo mode - show existing messages
+    const area=document.getElementById('msgs-area');
+    const loading=document.getElementById('msgs-loading');
+    if(loading)loading.remove();
+    if(area){
+      MSGS[msgKey].forEach(m=>{
+        const div=document.createElement('div');
+        div.innerHTML=buildMsg(m);
+        area.appendChild(div.firstElementChild||div);
+      });
+      area.scrollTop=area.scrollHeight;
+    }
+  }
 }
 
 function buildMsg(m){
@@ -1863,15 +1917,35 @@ function buildMsg(m){
   </div></div>`;
 }
 
-function sendMsg(key){
+async function sendMsg(key){
   const ci=document.getElementById('ci');if(!ci)return;
   const text=ci.value.trim();if(!text)return;
   const area=document.getElementById('msgs-area');if(!area)return;
-  const m={av:'SC',bg:'#2456A4',tc:'#fff',name:'${CURRENT_USER.full_name}',text,time:nowTime(),mine:true};
-  if(!MSGS[key])MSGS[key]=[];MSGS[key].push(m);
-  const div=document.createElement('div');div.innerHTML=buildMsg(m);
+  const m={
+    av:CURRENT_USER.initials,
+    bg:'#2456A4',tc:'#fff',
+    name:CURRENT_USER.full_name,
+    text,time:nowTime(),mine:true
+  };
+  if(!MSGS[key])MSGS[key]=[];
+  MSGS[key].push(m);
+  const div=document.createElement('div');
+  div.innerHTML=buildMsg(m);
   area.appendChild(div.firstElementChild||div);
   ci.value='';ci.style.height='';area.scrollTop=area.scrollHeight;
+  // Save to Supabase
+  if(CURRENT_USER.org_id&&CURRENT_USER.org_id!=='demo'){
+    try {
+      await supaFetch('messages',{
+        insert:{
+          org_id:CURRENT_USER.org_id,
+          channel_id:key,
+          user_id:CURRENT_USER.id,
+          content:text,
+        }
+      });
+    } catch(e){ console.error('Message save error',e); }
+  }
 }
 function sendMsgSub(key){sendMsg(key);}
 
