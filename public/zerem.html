@@ -2286,8 +2286,7 @@ function submitStyle(){
   // ── Date validation ──
   const errors=[];
 
-  if(dFab&&dAcc&&dFab>dAcc)
-    errors.push('Fabric arrival must be before accessories date.');
+  
 
   if(dAcc&&dShip&&dAcc>=dShip)
     errors.push('Accessories date must be strictly before ship date.');
