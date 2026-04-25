@@ -1737,6 +1737,21 @@ function renderSubsList(){
       renderSubsList();
       // if org page is open, re-render it too
       if(currentView?.type==='org')renderOrgPage(document.getElementById('mc'));
+      // Rebuild dependsOn chain based on new order
+      SUBS.forEach((sub, idx) => {
+        sub.position = idx;
+        sub.dependsOn = idx > 0 ? SUBS[idx-1].id : null;
+      });
+      // Save new positions to Supabase
+      if(CURRENT_USER.org_id&&CURRENT_USER.org_id!=='demo'){
+        SUBS.forEach(async (sub, idx) => {
+          try {
+            const url=`${SUPA_URL}/rest/v1/sub_departments?id=eq.${sub.id}`;
+            await fetch(url,{method:'PATCH',headers:{'apikey':SUPA_KEY,'Authorization':`Bearer ${CURRENT_USER.access_token||SUPA_KEY}`,'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify({position:idx})});
+          } catch(e){ console.error('Position save error',e); }
+        });
+      }
+      if(currentView?.type==='subdept')renderContent();
       showToast(moved.name+' reordered');
     });
 
