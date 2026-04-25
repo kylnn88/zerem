@@ -539,10 +539,25 @@ SUBS.forEach((sub, idx) => {
       });
     }
     
-updateUserUI();
-renderSidebar();
-loadStyles();
+// Load department members
+    const deptMembers=await supaFetch('department_members',{
+      filters:[{key:'org_id',value:CURRENT_USER.org_id}]
+    });
+    if(deptMembers&&deptMembers.length>0){
+      deptMembers.forEach(dm=>{
+        const dept=DEPTS.find(d=>d.id===dm.department_id);
+        if(dept&&!dept.members.includes(dm.user_id)){
+          dept.members.push(dm.user_id);
+        }
+      });
+    }
+    updateUserUI();
+    renderSidebar();
+    loadStyles();
     loadOrgMembers();
+    if(currentView?.type==='org'){
+      renderOrgPage(document.getElementById('mc'));
+    }
   } catch(e) {
     console.log('Using demo data', e);
   }
