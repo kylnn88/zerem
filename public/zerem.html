@@ -610,8 +610,24 @@ async function loadProductionLogs(){
 }
 
 // ── CONSTANTS ──
-const MONTHS=['July 2025','August 2025','September 2025'];
-const MONTH_META=[{year:2025,month:6,days:31},{year:2025,month:7,days:31},{year:2025,month:8,days:30}];
+// Generate 12 months starting from current month
+const MONTHS=(function(){
+  const months=[];const now=new Date();
+  for(let i=0;i<12;i++){
+    const d=new Date(now.getFullYear(),now.getMonth()+i,1);
+    months.push(d.toLocaleDateString('en-US',{month:'long',year:'numeric'}));
+  }
+  return months;
+})();
+const MONTH_META=(function(){
+  const meta=[];const now=new Date();
+  for(let i=0;i<12;i++){
+    const d=new Date(now.getFullYear(),now.getMonth()+i,1);
+    const days=new Date(d.getFullYear(),d.getMonth()+1,0).getDate();
+    meta.push({year:d.getFullYear(),month:d.getMonth(),days});
+  }
+  return meta;
+})();
 const WEEKS=['Week 1','Week 2','Week 3','Week 4'];
 const SIZES=['XS','S','M','L','XL','XXL'];
 const COLORS=['#2456A4','#534AB7','#D85A30','#BA7517','#185FA5','#D4537E','#087A6B','#8B5CF6'];
@@ -2249,14 +2265,75 @@ function addCR(){
 function rCR(i){const el=document.getElementById('rw-'+i);if(el)el.remove();}
 function setCM(i,mode){colourRowModes[i]=mode;const s=document.getElementById('cs-'+i);if(s)s.classList.toggle('hidden',mode==='simple');document.querySelectorAll(`#rw-${i} .mt-b`).forEach(b=>b.classList.toggle('active',(mode==='simple'&&b.textContent==='Total only')||(mode==='detailed'&&b.textContent==='Sizes')));}
 function submitStyle(){
-  const code=document.getElementById('f-code')?.value.trim();const buyer=document.getElementById('f-buyer')?.value.trim();
+  const code=document.getElementById('f-code')?.value.trim();
+  const buyer=document.getElementById('f-buyer')?.value.trim();
   if(!code||!buyer){showToast('Style code and buyer required');return;}
+
+  // Get date values
+  const fabricRaw=document.getElementById('f-fabric')?.value;
+  const accRaw=document.getElementById('f-acc')?.value;
+  const shipRaw=document.getElementById('f-ship')?.value;
+  const monStartRaw=document.getElementById('mon-start')?.value;
+  const monFinRaw=document.getElementById('mon-finish')?.value;
+
+  const toD=r=>r?new Date(r):null;
+  const dFab=toD(fabricRaw);
+  const dAcc=toD(accRaw);
+  const dShip=toD(shipRaw);
+  const dMonStart=toD(monStartRaw);
+  const dMonFin=toD(monFinRaw);
+
+  // ── Date validation ──
+  const errors=[];
+
+  if(dFab&&dAcc&&dFab>dAcc)
+    errors.push('Fabric arrival must be before accessories date.');
+
+  if(dAcc&&dShip&&dAcc>=dShip)
+    errors.push('Accessories date must be strictly before ship date.');
+
+  if(dFab&&dShip&&dFab>dShip)
+    errors.push('Fabric arrival must be before ship date.');
+
+  if(dMonStart&&dFab&&dMonStart<=dFab)
+    errors.push('Monitor start must be after fabric arrival date.');
+
+  if(dMonStart&&dAcc&&dMonStart>dAcc)
+    errors.push('Monitor start must be on or before accessories date.');
+
+  if(dMonFin&&dShip&&dMonFin>dShip)
+    errors.push('Monitor finish cannot be after ship date.');
+
+  if(dMonStart&&dMonFin&&dMonStart>dMonFin)
+    errors.push('Monitor start must be before monitor finish date.');
+
+  if(errors.length){
+    showToast(errors[0]);
+    return;
+  }
+
+  // Clear errors
+  const errEl=document.getElementById('style-form-errors');
+  if(errEl)errEl.remove();
+
   const monSubId=document.getElementById('mon-sub')?.value||'sewing';
   const rows=document.querySelectorAll('.cr');const colours=[];
   rows.forEach(row=>{const idx=parseInt(row.dataset.idx);const name=document.getElementById('cn-'+idx)?.value.trim()||'Colour '+(idx+1);const qty=parseInt(document.getElementById('cq-'+idx)?.value)||0;const mode=colourRowModes[idx]||'simple';const sI=row.closest('.rw')?.querySelectorAll('.szrow input');const sizes=mode==='detailed'?Array.from(sI||[]).map((inp,i)=>({s:SIZES[i],q:parseInt(inp.value)||0})).filter(s=>s.q>0):[];colours.push({name,qty,mode,sizes});});
-  const newStyle={code,buyer,fabric:fmtD(document.getElementById('f-fabric')?.value),accessories:fmtD(document.getElementById('f-acc')?.value),shipDate:fmtD(document.getElementById('f-ship')?.value),month:activeMonth,week:activeWeek,colours,monitor:{subId:monSubId,startDate:fmtD(document.getElementById('mon-start')?.value),finishDate:fmtD(document.getElementById('mon-finish')?.value),dailyTarget:parseInt(document.getElementById('mon-target')?.value)||0},prepStatus:'not-started',prepDone:0,sewingStatus:'not-started',sewingLog:[],qcStatus:'not-started',qcLog:[],packingStatus:'not-started',packingLog:[]};
+
+  const newStyle={code,buyer,
+    fabric:fmtD(fabricRaw),
+    accessories:fmtD(accRaw),
+    shipDate:fmtD(shipRaw),
+    month:activeMonth,week:activeWeek,colours,
+    monitor:{subId:monSubId,startDate:fmtD(monStartRaw),finishDate:fmtD(monFinRaw),dailyTarget:parseInt(document.getElementById('mon-target')?.value)||0},
+    prepStatus:'not-started',prepDone:0,
+    sewingStatus:'not-started',sewingLog:[],
+    qcStatus:'not-started',qcLog:[],
+    packingStatus:'not-started',packingLog:[]
+  };
+
   STYLES.push(newStyle);
-  // Save to Supabase
+
   if(CURRENT_USER.org_id&&CURRENT_USER.org_id!=='demo'){
     supaFetch('styles',{insert:{
       org_id:CURRENT_USER.org_id,
@@ -2274,6 +2351,7 @@ function submitStyle(){
       if(result&&result[0])newStyle.dbId=result[0].id;
     }).catch(e=>console.error('Style save error',e));
   }
+
   showToast(`${code} added`);renderT1(document.getElementById('mc'));
 }
 
