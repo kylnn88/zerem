@@ -2968,11 +2968,17 @@ function deleteSubModal(id){
     </div>`);
 }
 
-function doDeleteSub(id){
+async function doDeleteSub(id){
   const idx=SUBS.findIndex(s=>s.id===id);if(idx===-1)return;
   const name=SUBS[idx].name;
   SUBS.splice(idx,1);
   closeModal();
+  if(CURRENT_USER.org_id&&CURRENT_USER.org_id!=='demo'){
+    try {
+      const url=`${SUPA_URL}/rest/v1/sub_departments?id=eq.${id}`;
+      await fetch(url,{method:'DELETE',headers:{'apikey':SUPA_KEY,'Authorization':`Bearer ${CURRENT_USER.access_token||SUPA_KEY}`}});
+    } catch(e){ console.error('Delete sub-dept error',e); }
+  }
   if(currentView?.type==='subdept'&&currentView.id===id){
     currentView=null;
     document.getElementById('mc').innerHTML=`<div class="welcome"><div class="w-icon">💬</div><div class="w-title">Sub-department deleted</div><div class="w-sub">Select another channel from the sidebar.</div></div>`;
