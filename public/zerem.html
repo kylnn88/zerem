@@ -2689,11 +2689,21 @@ function deleteStyleConfirm(si){
     </div>`);
 }
 
-function doDeleteStyle(si){
+async function doDeleteStyle(si){
   const s=STYLES[si];if(!s)return;
   const code=s.code;
   STYLES.splice(si,1);
   closeModal();
+  // Delete from Supabase
+  if(s.dbId&&CURRENT_USER.org_id&&CURRENT_USER.org_id!=='demo'){
+    try {
+      const url=`${SUPA_URL}/rest/v1/styles?id=eq.${s.dbId}`;
+      await fetch(url,{method:'DELETE',headers:{'apikey':SUPA_KEY,'Authorization':`Bearer ${CURRENT_USER.access_token||SUPA_KEY}`}});
+      // Also delete production logs for this style
+      const url2=`${SUPA_URL}/rest/v1/production_logs?style_id=eq.${s.dbId}`;
+      await fetch(url2,{method:'DELETE',headers:{'apikey':SUPA_KEY,'Authorization':`Bearer ${CURRENT_USER.access_token||SUPA_KEY}`}});
+    } catch(e){ console.error('Delete style error',e); }
+  }
   const mc=document.getElementById('mc');
   const sd=SUBS.find(x=>x.id===currentView?.id);
   if(activeTab==='styles'&&sd)renderAllStyles(mc,sd);
