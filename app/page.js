@@ -62,6 +62,7 @@ export default function Home() {
       full_name: profile.full_name || '',
       role: profile.role || 'member',
       org_name: profile.organisations?.name || '',
+      email: session.user.email || '',
     });
     window.location.replace('/zerem.html?' + params.toString());
   }

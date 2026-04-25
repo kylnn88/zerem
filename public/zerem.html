@@ -400,23 +400,7 @@ table.lg tfoot td.tdc{background:#EBF2FF;}
     <div class="sb-scroll" id="sb-scroll">
       <!-- Departments -->
       <div class="sb-sec"><span>Departments</span></div>
-      <div class="sbi" id="sb-ops" onclick="toggleOps(event)">
-        <div class="sbi-dot" style="background:#2456A4;"></div>
-        <span class="sbi-lbl">Operations</span>
-        <span class="dept-arrow open" id="ops-arrow">›</span>
-      </div>
-      <div id="ops-subs">
-        <div id="subs-list"></div>
-        <div class="add-row" onclick="openModal('addSubdept')"><span>+ Add sub-department</span></div>
-      </div>
-      <div class="sbi" id="ni-hr" onclick="openDept('hr')">
-        <div class="sbi-dot" style="background:#C94B2C;"></div>
-        <span class="sbi-lbl">HR</span>
-      </div>
-      <div class="sbi" id="ni-accounts" onclick="openDept('accounts')">
-        <div class="sbi-dot" style="background:#534AB7;"></div>
-        <span class="sbi-lbl">Accounts</span>
-      </div>
+      <div id="depts-list"></div>
 
       <!-- Groups -->
       <div class="sb-sec"><span>Groups</span><button class="sb-sec-btn" onclick="openModal('newGroup')">+</button></div>
@@ -465,6 +449,7 @@ const CURRENT_USER = {
   full_name: URL_PARAMS.get('full_name') || 'User',
   role: URL_PARAMS.get('role') || 'member',
   org_name: URL_PARAMS.get('org_name') || 'My Organisation',
+  email: URL_PARAMS.get('email') || '',
   initials: (URL_PARAMS.get('full_name') || 'U').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2),
 };
 
@@ -574,13 +559,7 @@ let colourRowCount=0, colourRowModes={};
 let toastTimer;
 
 // ── SUBS ──
-let SUBS=[
-  {id:'planning',name:'Planning',type:1,color:'#2456A4',label:'Master planning input',unread:0,locked:true},
-  {id:'preparation',name:'Preparation',type:2,color:'#534AB7',label:'Priority & preparation status',dependsOn:'planning',unread:2,locked:true},
-  {id:'sewing',name:'Sewing',type:3,color:'#BA7517',label:'Daily qty — pcs sewn',recordLabel:'pcs sewn',dependsOn:'preparation',statusKey:'sewingStatus',unread:0,locked:false},
-  {id:'qc',name:'QC',type:3,color:'#D85A30',label:'Daily qty — pcs inspected',recordLabel:'pcs inspected',dependsOn:'sewing',statusKey:'qcStatus',unread:5,locked:false},
-  {id:'packing',name:'Packing',type:3,color:'#185FA5',label:'Daily qty — pcs packed',recordLabel:'pcs packed',dependsOn:'qc',statusKey:'packingStatus',unread:1,locked:false},
-];
+let SUBS=[];
 
 // ── GROUPS ──
 let GROUPS=[];
@@ -593,121 +572,121 @@ const MSGS={
   planning:[
     {sys:'Planning channel — master style input'},
     {av:'JO',bg:'#FAECE7',tc:'#712B13',name:'James Obi',text:'ST-001 through ST-004 entered for July. Please confirm shipment dates.',time:'9:02 AM'},
-    {av:'SC',bg:'#2456A4',tc:'#fff',name:'Sarah Chen',text:'Confirmed. ST-003 shipment moved to Aug 6.',time:'9:15 AM',mine:true},
+    {av:'SC',bg:'#2456A4',tc:'#fff',name:'${CURRENT_USER.full_name}',text:'Confirmed. ST-003 shipment moved to Aug 6.',time:'9:15 AM',mine:true},
     {av:'AK',bg:'#E6F1FB',tc:'#0C447C',name:'Ama Kofi',text:'Fabric for ST-003 arrives Jul 10 — fine for the revised date.',time:'9:20 AM'},
   ],
   preparation:[
     {sys:'Preparation channel — priority & cut status'},
     {av:'JO',bg:'#FAECE7',tc:'#712B13',name:'James Obi',text:'ST-001 and ST-002 fully prepared. Starting ST-003 today.',time:'8:30 AM'},
-    {av:'SC',bg:'#2456A4',tc:'#fff',name:'Sarah Chen',text:'Good. ST-004 must start by Jul 22 for the Aug 12 shipment.',time:'8:45 AM',mine:true},
+    {av:'SC',bg:'#2456A4',tc:'#fff',name:'${CURRENT_USER.full_name}',text:'Good. ST-004 must start by Jul 22 for the Aug 12 shipment.',time:'8:45 AM',mine:true},
     {av:'RK',bg:'#FAEEDA',tc:'#633806',name:'Raj Kumar',text:'Can we get extra hands for ST-003? 2000 pcs, 2 colours.',time:'9:05 AM'},
-    {av:'SC',bg:'#2456A4',tc:'#fff',name:'Sarah Chen',text:'Approved — 2 more operators from tomorrow.',time:'9:10 AM',mine:true},
+    {av:'SC',bg:'#2456A4',tc:'#fff',name:'${CURRENT_USER.full_name}',text:'Approved — 2 more operators from tomorrow.',time:'9:10 AM',mine:true},
   ],
   sewing:[
     {sys:'Sewing channel — pcs sewn tracked daily'},
     {av:'AK',bg:'#E6F1FB',tc:'#0C447C',name:'Ama Kofi',text:'ST-001 at 700 pcs — on track for Jul 16 finish.',time:'8:15 AM'},
-    {av:'SC',bg:'#2456A4',tc:'#fff',name:'Sarah Chen',text:'Great. What about ST-002?',time:'8:22 AM',mine:true},
+    {av:'SC',bg:'#2456A4',tc:'#fff',name:'${CURRENT_USER.full_name}',text:'Great. What about ST-002?',time:'8:22 AM',mine:true},
     {av:'AK',bg:'#E6F1FB',tc:'#0C447C',name:'Ama Kofi',text:'ST-002 slow — machine was down yesterday.',time:'8:25 AM'},
     {av:'JO',bg:'#FAECE7',tc:'#712B13',name:'James Obi',text:'Machine repaired. Back to full speed today.',time:'8:30 AM'},
-    {av:'SC',bg:'#2456A4',tc:'#fff',name:'Sarah Chen',text:'Good — hit the 80 pcs/day target for ST-002 today.',time:'8:35 AM',mine:true},
+    {av:'SC',bg:'#2456A4',tc:'#fff',name:'${CURRENT_USER.full_name}',text:'Good — hit the 80 pcs/day target for ST-002 today.',time:'8:35 AM',mine:true},
     {av:'AK',bg:'#E6F1FB',tc:'#0C447C',name:'Ama Kofi',text:'Understood. Will update the log at end of shift.',time:'8:38 AM',att:{icon:'📊',name:'Sewing progress Jul 3.xlsx',size:'14 KB'}},
-    {av:'SC',bg:'#2456A4',tc:'#fff',name:'Sarah Chen',text:'Thanks — keep it up!',time:'8:40 AM',mine:true,rxn:[{e:'👍',n:2}]},
+    {av:'SC',bg:'#2456A4',tc:'#fff',name:'${CURRENT_USER.full_name}',text:'Thanks — keep it up!',time:'8:40 AM',mine:true,rxn:[{e:'👍',n:2}]},
   ],
   qc:[
     {sys:'QC channel — pcs inspected tracked daily'},
     {av:'RK',bg:'#FAEEDA',tc:'#633806',name:'Raj Kumar',text:'QC on ST-001 started. First 80 pcs passed.',time:'2:00 PM'},
-    {av:'SC',bg:'#2456A4',tc:'#fff',name:'Sarah Chen',text:'Any rejections?',time:'2:05 PM',mine:true},
+    {av:'SC',bg:'#2456A4',tc:'#fff',name:'${CURRENT_USER.full_name}',text:'Any rejections?',time:'2:05 PM',mine:true},
     {av:'RK',bg:'#FAEEDA',tc:'#633806',name:'Raj Kumar',text:'3 pcs rejected — stitching issue. Sent back to Sewing.',time:'2:08 PM'},
-    {av:'SC',bg:'#2456A4',tc:'#fff',name:'Sarah Chen',text:'Noted. Log it and flag to James.',time:'2:12 PM',mine:true},
+    {av:'SC',bg:'#2456A4',tc:'#fff',name:'${CURRENT_USER.full_name}',text:'Noted. Log it and flag to James.',time:'2:12 PM',mine:true},
   ],
   packing:[
     {sys:'Packing channel — pcs packed tracked daily'},
     {av:'LB',bg:'#EAF3DE',tc:'#27500A',name:'Lena Boateng',text:'Packing materials for ST-001 ready. Waiting for QC clearance.',time:'3:00 PM'},
-    {av:'SC',bg:'#2456A4',tc:'#fff',name:'Sarah Chen',text:'QC should clear the first batch by end of today.',time:'3:05 PM',mine:true},
+    {av:'SC',bg:'#2456A4',tc:'#fff',name:'${CURRENT_USER.full_name}',text:'QC should clear the first batch by end of today.',time:'3:05 PM',mine:true},
   ],
   hr:[
     {sys:'HR department channel'},
     {av:'LB',bg:'#EAF3DE',tc:'#27500A',name:'Lena Boateng',text:'Leave applications for next month have been submitted by the team.',time:'10:00 AM'},
-    {av:'SC',bg:'#2456A4',tc:'#fff',name:'Sarah Chen',text:'Noted. Will review and approve by Friday.',time:'10:15 AM',mine:true},
+    {av:'SC',bg:'#2456A4',tc:'#fff',name:'${CURRENT_USER.full_name}',text:'Noted. Will review and approve by Friday.',time:'10:15 AM',mine:true},
   ],
   accounts:[
     {sys:'Accounts department channel'},
     {av:'JO',bg:'#FAECE7',tc:'#712B13',name:'James Obi',text:'Invoice for fabric batch 3 has been received. Total: $12,400.',time:'11:00 AM'},
-    {av:'SC',bg:'#2456A4',tc:'#fff',name:'Sarah Chen',text:'Please process payment by end of week.',time:'11:10 AM',mine:true},
+    {av:'SC',bg:'#2456A4',tc:'#fff',name:'${CURRENT_USER.full_name}',text:'Please process payment by end of week.',time:'11:10 AM',mine:true},
   ],
   'g-q3':[
     {sys:'Q3 Launch — cross-team coordination'},
-    {av:'SC',bg:'#2456A4',tc:'#fff',name:'Sarah Chen',text:'Q3 planning kickoff — we need to finalise shipment schedule for Aug and Sep.',time:'9:00 AM',mine:true},
+    {av:'SC',bg:'#2456A4',tc:'#fff',name:'${CURRENT_USER.full_name}',text:'Q3 planning kickoff — we need to finalise shipment schedule for Aug and Sep.',time:'9:00 AM',mine:true},
     {av:'JO',bg:'#FAECE7',tc:'#712B13',name:'James Obi',text:'On it. Operations is ready with 12 styles planned for Aug.',time:'9:05 AM'},
     {av:'AK',bg:'#E6F1FB',tc:'#0C447C',name:'Ama Kofi',text:'Sewing can handle up to 2500 pcs/week for Aug.',time:'9:08 AM'},
     {av:'RK',bg:'#FAEEDA',tc:'#633806',name:'Raj Kumar',text:'QC team will be at full strength from Aug 4.',time:'9:12 AM'},
-    {av:'SC',bg:'#2456A4',tc:'#fff',name:'Sarah Chen',text:'Perfect. Let\'s lock in the Aug schedule this week.',time:'9:15 AM',mine:true,rxn:[{e:'✅',n:3}]},
+    {av:'SC',bg:'#2456A4',tc:'#fff',name:'${CURRENT_USER.full_name}',text:'Perfect. Let\'s lock in the Aug schedule this week.',time:'9:15 AM',mine:true,rxn:[{e:'✅',n:3}]},
     {av:'LB',bg:'#EAF3DE',tc:'#27500A',name:'Lena Boateng',text:'Packing materials for Q3 are already ordered and arriving Jul 28.',time:'9:20 AM'},
   ],
   'g-ship':[
     {sys:'Shipment Alerts — urgent updates only'},
     {av:'LB',bg:'#EAF3DE',tc:'#27500A',name:'Lena Boateng',text:'ST-001 export documents are ready. Customs clearance booked for Jul 19.',time:'2:00 PM'},
-    {av:'SC',bg:'#2456A4',tc:'#fff',name:'Sarah Chen',text:'Great. Please share the customs reference number.',time:'2:05 PM',mine:true},
+    {av:'SC',bg:'#2456A4',tc:'#fff',name:'${CURRENT_USER.full_name}',text:'Great. Please share the customs reference number.',time:'2:05 PM',mine:true},
     {av:'LB',bg:'#EAF3DE',tc:'#27500A',name:'Lena Boateng',text:'Ref: CUST-2025-7841. All good.',time:'2:08 PM'},
   ],
   'g-fab':[
     {sys:'Fabric & Materials — arrivals and issues'},
     {av:'AK',bg:'#E6F1FB',tc:'#0C447C',name:'Ama Kofi',text:'Navy Blue fabric for ST-001 arrived. Quality check passed.',time:'8:00 AM'},
     {av:'JO',bg:'#FAECE7',tc:'#712B13',name:'James Obi',text:'Pink fabric for ST-002 is delayed — supplier says Jul 7 now.',time:'8:10 AM'},
-    {av:'SC',bg:'#2456A4',tc:'#fff',name:'Sarah Chen',text:'That\'s ok, ST-002 sewing starts Jul 10 anyway.',time:'8:15 AM',mine:true},
+    {av:'SC',bg:'#2456A4',tc:'#fff',name:'${CURRENT_USER.full_name}',text:'That\'s ok, ST-002 sewing starts Jul 10 anyway.',time:'8:15 AM',mine:true},
   ],
   'g-fab':[
     {sys:'Fabric & Materials — arrivals and issues'},
     {av:'AK',bg:'#E6F1FB',tc:'#0C447C',name:'Ama Kofi',text:'Navy Blue fabric for ST-001 arrived this morning — 850m, quality check passed ✅',time:'8:00 AM'},
     {av:'JO',bg:'#FAECE7',tc:'#712B13',name:'James Obi',text:'Pink fabric for ST-002 is delayed by supplier — now arriving Jul 7 instead of Jul 4.',time:'8:12 AM'},
-    {av:'SC',bg:'#2456A4',tc:'#fff',name:'Sarah Chen',text:'That\'s manageable — sewing on ST-002 doesn\'t start until Jul 10 anyway.',time:'8:18 AM',mine:true},
+    {av:'SC',bg:'#2456A4',tc:'#fff',name:'${CURRENT_USER.full_name}',text:'That\'s manageable — sewing on ST-002 doesn\'t start until Jul 10 anyway.',time:'8:18 AM',mine:true},
     {av:'AK',bg:'#E6F1FB',tc:'#0C447C',name:'Ama Kofi',text:'Black and Charcoal for ST-003 confirmed arriving Jul 5.',time:'8:26 AM',rxn:[{e:'👍',n:2}]},
     {av:'JO',bg:'#FAECE7',tc:'#712B13',name:'James Obi',text:'Updated the material arrival log.',time:'8:32 AM'},
   ],
   'g-mgmt':[
     {sys:'Management — leadership channel'},
-    {av:'SC',bg:'#2456A4',tc:'#fff',name:'Sarah Chen',text:'Monthly review: production tracking well. Sewing is slightly behind on ST-002 due to machine downtime but that\'s resolved now.',time:'9:00 AM',mine:true},
+    {av:'SC',bg:'#2456A4',tc:'#fff',name:'${CURRENT_USER.full_name}',text:'Monthly review: production tracking well. Sewing is slightly behind on ST-002 due to machine downtime but that\'s resolved now.',time:'9:00 AM',mine:true},
     {av:'JO',bg:'#FAECE7',tc:'#712B13',name:'James Obi',text:'Agreed. Overall team performance is strong. I recommend a bonus recognition for the Sewing team if we hit the July targets.',time:'9:11 AM'},
-    {av:'SC',bg:'#2456A4',tc:'#fff',name:'Sarah Chen',text:'Fully support that. Let\'s revisit on July 31 once numbers are confirmed.',time:'9:15 AM',mine:true,rxn:[{e:'✅',n:1}]},
+    {av:'SC',bg:'#2456A4',tc:'#fff',name:'${CURRENT_USER.full_name}',text:'Fully support that. Let\'s revisit on July 31 once numbers are confirmed.',time:'9:15 AM',mine:true,rxn:[{e:'✅',n:1}]},
   ],
 
   'dm-rk':[
     {av:'RK',bg:'#FAEEDA',tc:'#633806',name:'Raj Kumar',text:'Sarah, can we discuss the QC rejection rate for ST-001? It\'s higher than expected.',time:'11:00 AM'},
-    {av:'SC',bg:'#2456A4',tc:'#fff',name:'Sarah Chen',text:'Sure. What\'s the current rejection rate?',time:'11:05 AM',mine:true},
+    {av:'SC',bg:'#2456A4',tc:'#fff',name:'${CURRENT_USER.full_name}',text:'Sure. What\'s the current rejection rate?',time:'11:05 AM',mine:true},
     {av:'RK',bg:'#FAEEDA',tc:'#633806',name:'Raj Kumar',text:'About 2.5%. Mostly stitching on collars. I think we need to retrain 2 operators.',time:'11:08 AM'},
-    {av:'SC',bg:'#2456A4',tc:'#fff',name:'Sarah Chen',text:'Agreed. Let\'s schedule a training session for tomorrow morning before the shift starts.',time:'11:12 AM',mine:true},
+    {av:'SC',bg:'#2456A4',tc:'#fff',name:'${CURRENT_USER.full_name}',text:'Agreed. Let\'s schedule a training session for tomorrow morning before the shift starts.',time:'11:12 AM',mine:true},
     {av:'RK',bg:'#FAEEDA',tc:'#633806',name:'Raj Kumar',text:'Perfect. I\'ll arrange it. Thanks!',time:'11:14 AM',rxn:[{e:'👍',n:1}]},
   ],
   'dm-jo':[
     {av:'JO',bg:'#FAECE7',tc:'#712B13',name:'James Obi',text:'Sarah, we have a problem. The cutting machine broke down this morning.',time:'7:30 AM'},
-    {av:'SC',bg:'#2456A4',tc:'#fff',name:'Sarah Chen',text:'How bad? Which styles are affected?',time:'7:35 AM',mine:true},
+    {av:'SC',bg:'#2456A4',tc:'#fff',name:'${CURRENT_USER.full_name}',text:'How bad? Which styles are affected?',time:'7:35 AM',mine:true},
     {av:'JO',bg:'#FAECE7',tc:'#712B13',name:'James Obi',text:'ST-003 and ST-004. Repair team says 2 hours to fix.',time:'7:38 AM'},
-    {av:'SC',bg:'#2456A4',tc:'#fff',name:'Sarah Chen',text:'Ok, use the time to do manual finishing on ST-001. Don\'t let the team idle.',time:'7:40 AM',mine:true},
+    {av:'SC',bg:'#2456A4',tc:'#fff',name:'${CURRENT_USER.full_name}',text:'Ok, use the time to do manual finishing on ST-001. Don\'t let the team idle.',time:'7:40 AM',mine:true},
     {av:'JO',bg:'#FAECE7',tc:'#712B13',name:'James Obi',text:'Smart. On it.',time:'7:42 AM'},
     {av:'JO',bg:'#FAECE7',tc:'#712B13',name:'James Obi',text:'Machine is back. ST-003 cutting started.',time:'9:45 AM'},
   ],
   'dm-ak':[
     {av:'AK',bg:'#E6F1FB',tc:'#0C447C',name:'Ama Kofi',text:'Good morning Sarah! ST-001 sewing is ahead of schedule. We should finish by Jul 14 instead of Jul 16.',time:'8:00 AM'},
-    {av:'SC',bg:'#2456A4',tc:'#fff',name:'Sarah Chen',text:'Excellent! That gives us more buffer for QC. Great work, Ama.',time:'8:05 AM',mine:true,rxn:[{e:'🎉',n:1}]},
+    {av:'SC',bg:'#2456A4',tc:'#fff',name:'${CURRENT_USER.full_name}',text:'Excellent! That gives us more buffer for QC. Great work, Ama.',time:'8:05 AM',mine:true,rxn:[{e:'🎉',n:1}]},
   ],
   'hr':[
     {sys:'HR department channel'},
     {av:'KS',bg:'#E8F0FA',tc:'#1A4B7B',name:'Kwame Sarfo',text:'Leave applications for August have been submitted by 18 team members. Awaiting approval.',time:'10:00 AM'},
-    {av:'SC',bg:'#2456A4',tc:'#fff',name:'Sarah Chen',text:'Thanks Kwame. I\'ll review and approve by end of Friday. Flag any clashes.',time:'10:16 AM',mine:true},
+    {av:'SC',bg:'#2456A4',tc:'#fff',name:'${CURRENT_USER.full_name}',text:'Thanks Kwame. I\'ll review and approve by end of Friday. Flag any clashes.',time:'10:16 AM',mine:true},
     {av:'KS',bg:'#E8F0FA',tc:'#1A4B7B',name:'Kwame Sarfo',text:'There are 2 clashes in Sewing during Aug 11 week — 2 operators requested the same dates.',time:'10:21 AM'},
-    {av:'SC',bg:'#2456A4',tc:'#fff',name:'Sarah Chen',text:'Please reach out individually and ask one to shift by a week. Standard policy applies.',time:'10:26 AM',mine:true,rxn:[{e:'✅',n:1}]},
+    {av:'SC',bg:'#2456A4',tc:'#fff',name:'${CURRENT_USER.full_name}',text:'Please reach out individually and ask one to shift by a week. Standard policy applies.',time:'10:26 AM',mine:true,rxn:[{e:'✅',n:1}]},
   ],
   'accounts':[
     {sys:'Accounts department channel'},
     {av:'MB',bg:'#FAE8F5',tc:'#7B1A6A',name:'Mia Brown',text:'Invoice #INV-2025-341 from Texfab received — $12,400 for fabric batch 3. Payment due Jul 15.',time:'11:00 AM'},
-    {av:'SC',bg:'#2456A4',tc:'#fff',name:'Sarah Chen',text:'Process payment by Jul 12 to stay within terms. Mark as priority.',time:'11:11 AM',mine:true},
+    {av:'SC',bg:'#2456A4',tc:'#fff',name:'${CURRENT_USER.full_name}',text:'Process payment by Jul 12 to stay within terms. Mark as priority.',time:'11:11 AM',mine:true},
     {av:'MB',bg:'#FAE8F5',tc:'#7B1A6A',name:'Mia Brown',text:'Done — payment scheduled for Jul 11. Confirmation will be sent to supplier.',time:'11:19 AM',rxn:[{e:'✅',n:1}]},
-    {av:'SC',bg:'#2456A4',tc:'#fff',name:'Sarah Chen',text:'Thank you. Can you send me the June expense summary as well?',time:'11:23 AM',mine:true},
+    {av:'SC',bg:'#2456A4',tc:'#fff',name:'${CURRENT_USER.full_name}',text:'Thank you. Can you send me the June expense summary as well?',time:'11:23 AM',mine:true},
     {av:'MB',bg:'#FAE8F5',tc:'#7B1A6A',name:'Mia Brown',text:'Attaching it now.',time:'11:26 AM',att:{icon:'📄',name:'June 2025 Expenses.pdf',size:'218 KB'}},
   ],
   'dm-lb':[
     {av:'LB',bg:'#EAF3DE',tc:'#27500A',name:'Lena Boateng',text:'The packing boxes for ST-001 have arrived. 500 units as requested.',time:'1:00 PM'},
-    {av:'SC',bg:'#2456A4',tc:'#fff',name:'Sarah Chen',text:'Perfect. Store them in bay 3 until QC clearance.',time:'1:05 PM',mine:true},
+    {av:'SC',bg:'#2456A4',tc:'#fff',name:'${CURRENT_USER.full_name}',text:'Perfect. Store them in bay 3 until QC clearance.',time:'1:05 PM',mine:true},
   ],
 };
 
@@ -741,11 +720,7 @@ function showToast(msg){
   document.body.appendChild(t);toastTimer=setTimeout(()=>t.remove(),2400);
 }
 // TOP-LEVEL DEPARTMENTS
-let DEPTS=[
-  {id:'operations',name:'Operations',icon:'OPS',color:'#1B3A6B',colorBg:'#EBF2FF',desc:'End-to-end garment production — planning, preparation, sewing, QC, and packing.',head:'James Obi',headAv:'JO',members:['JO','AK','RK','LB'],subDepts:true},
-  {id:'hr',name:'HR',icon:'HR',color:'#C94B2C',colorBg:'#FAECE7',desc:'Human resources — recruitment, leave management, payroll, and compliance.',head:'Kwame Sarfo',headAv:'KS',members:['KS'],subDepts:false},
-  {id:'accounts',name:'Accounts',icon:'ACC',color:'#534AB7',colorBg:'#EEF6FF',desc:'Finance, invoicing, payments, and expense tracking.',head:'Mia Brown',headAv:'MB',members:['MB'],subDepts:false},
-];
+let DEPTS=[];
 
 function openOrgPage(){
   currentView={type:'org'};
@@ -1122,7 +1097,7 @@ function renderSettingsPage(mc){
             <input type="file" id="org-pic-input" accept="image/*" style="display:none;" onchange="handleOrgPicUpload(this)"/>
           </div>
           <div style="flex:1;">
-            <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:2px;">${ORG_STATE.orgName}</div>
+            <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:2px;">${CURRENT_USER.org_name}</div>
             <div style="font-size:12px;color:var(--text-3);margin-bottom:8px;">${DEPTS.length} departments · ${new Set(DEPTS.flatMap(d=>d.members).concat(['SC'])).size} members</div>
             <button onclick="document.getElementById('org-pic-input').click()" style="padding:5px 12px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:inherit;color:var(--text-2);background:var(--surface);cursor:pointer;">Upload logo</button>
             ${ORG_STATE.orgAvatar?`<button onclick="removeOrgPic()" style="padding:5px 12px;border:1px solid var(--border);border-radius:6px;font-size:12px;font-family:inherit;color:var(--error);background:var(--surface);cursor:pointer;margin-left:6px;">Remove</button>`:''}
@@ -1131,7 +1106,7 @@ function renderSettingsPage(mc){
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;">
           <div>
             <div style="font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px;">Organisation name</div>
-            <input id="set-orgname" value="${ORG_STATE.orgName}" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-size:13px;font-family:inherit;color:var(--text);outline:none;" onfocus="this.style.borderColor='var(--brand)'" onblur="this.style.borderColor='var(--border)'"/>
+            <input id="set-orgname" value="${CURRENT_USER.org_name}" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-size:13px;font-family:inherit;color:var(--text);outline:none;" onfocus="this.style.borderColor='var(--brand)'" onblur="this.style.borderColor='var(--border)'"/>
           </div>
           <div>
             <div style="font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px;">Industry</div>
@@ -1238,7 +1213,7 @@ function navReportsRail(){openReports();}
 function openProfile(){
   currentView={type:'profile'};
   const top=document.getElementById('topbar');
-  top.querySelector('.tb-left').innerHTML=`<div class="tb-av" style="width:30px;height:30px;border-radius:50%;background:var(--brand);color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${ORG_STATE.userInitials}</div><div class="tb-info"><div class="tb-name">My Profile</div><div class="tb-sub">Personal settings and preferences</div></div>`;
+  top.querySelector('.tb-left').innerHTML=`<div class="tb-av" style="width:30px;height:30px;border-radius:50%;background:var(--brand);color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;">${CURRENT_USER.initials}</div><div class="tb-info"><div class="tb-name">My Profile</div><div class="tb-sub">Personal settings and preferences</div></div>`;
   document.getElementById('tb-right').innerHTML='';
   document.getElementById('tabbar').classList.add('hidden');
   document.querySelectorAll('.sbi,.subdept-row,.sdr,.ni').forEach(e=>e.classList.remove('active','on'));
@@ -1260,7 +1235,7 @@ function renderProfilePage(mc){
       <div style="padding:20px 18px;display:flex;align-items:center;gap:22px;">
         <div style="position:relative;flex-shrink:0;">
           <div id="user-av-display" style="width:88px;height:88px;border-radius:50%;background:var(--brand);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;color:#fff;overflow:hidden;flex-shrink:0;">
-            ${ORG_STATE.userAvatar?`<img src="${ORG_STATE.userAvatar}" style="display:block;width:88px;height:88px;object-fit:cover;border-radius:50%;"/>`:`<span style="letter-spacing:-1px;">${ORG_STATE.userInitials}</span>`}
+            ${ORG_STATE.userAvatar?`<img src="${ORG_STATE.userAvatar}" style="display:block;width:88px;height:88px;object-fit:cover;border-radius:50%;"/>`:`<span style="letter-spacing:-1px;">${CURRENT_USER.initials}</span>`}
           </div>
           <div onclick="document.getElementById('user-pic-input').click()" style="position:absolute;bottom:0;right:0;width:26px;height:26px;border-radius:50%;background:var(--brand);border:3px solid var(--surface);display:flex;align-items:center;justify-content:center;cursor:pointer;" title="Change photo">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
@@ -1268,8 +1243,8 @@ function renderProfilePage(mc){
           <input type="file" id="user-pic-input" accept="image/*" style="display:none;" onchange="handleUserPicUpload(this)"/>
         </div>
         <div>
-          <div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:3px;">${ORG_STATE.userName}</div>
-          <div style="font-size:12px;color:var(--text-3);margin-bottom:12px;">${ORG_STATE.userRole} · ${ORG_STATE.orgName}</div>
+          <div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:3px;">${CURRENT_USER.full_name}</div>
+          <div style="font-size:12px;color:var(--text-3);margin-bottom:12px;">${CURRENT_USER.role} · ${CURRENT_USER.org_name}</div>
           <div style="display:flex;gap:8px;">
             <button onclick="document.getElementById('user-pic-input').click()" style="padding:6px 14px;border:1.5px solid var(--border);border-radius:7px;font-size:12px;font-family:inherit;color:var(--text-2);background:var(--surface);cursor:pointer;transition:all .15s;" onmouseenter="this.style.borderColor='var(--brand)';this.style.color='var(--brand)'" onmouseleave="this.style.borderColor='var(--border)';this.style.color='var(--text-2)'">Upload photo</button>
             ${ORG_STATE.userAvatar?`<button onclick="removeUserPic()" style="padding:6px 14px;border:1.5px solid var(--border);border-radius:7px;font-size:12px;font-family:inherit;color:var(--error);background:var(--surface);cursor:pointer;">Remove photo</button>`:''}
@@ -1287,7 +1262,7 @@ function renderProfilePage(mc){
       <div style="padding:18px;display:grid;grid-template-columns:1fr 1fr;gap:14px;">
         <div>
           <div style="font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px;">Display name</div>
-          <input id="pf-name" value="${ORG_STATE.userName}" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-size:13px;font-family:inherit;color:var(--text);outline:none;" onfocus="this.style.borderColor='var(--brand)'" onblur="this.style.borderColor='var(--border)'"/>
+          <input id="pf-name" value="${CURRENT_USER.full_name}" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-size:13px;font-family:inherit;color:var(--text);outline:none;" onfocus="this.style.borderColor='var(--brand)'" onblur="this.style.borderColor='var(--border)'"/>
         </div>
         <div>
           <div style="font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px;">Email</div>
@@ -1295,11 +1270,11 @@ function renderProfilePage(mc){
         </div>
         <div>
           <div style="font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px;">Role</div>
-          <input value="${ORG_STATE.userRole}" readonly style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-size:13px;font-family:inherit;color:var(--text-3);outline:none;background:var(--bg);"/>
+          <input value="${CURRENT_USER.role}" readonly style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-size:13px;font-family:inherit;color:var(--text-3);outline:none;background:var(--bg);"/>
         </div>
         <div>
           <div style="font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px;">Phone</div>
-          <input id="pf-phone" value="${ORG_STATE.userPhone}" placeholder="+1 555 000 0000" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-size:13px;font-family:inherit;color:var(--text);outline:none;" onfocus="this.style.borderColor='var(--brand)'" onblur="this.style.borderColor='var(--border)'"/>
+          <input id="pf-phone" value="${ORG_STATE.userPhone}" placeholder="" style="width:100%;padding:7px 10px;border:1.5px solid var(--border);border-radius:7px;font-size:13px;font-family:inherit;color:var(--text);outline:none;" onfocus="this.style.borderColor='var(--brand)'" onblur="this.style.borderColor='var(--border)'"/>
         </div>
         <div style="grid-column:1/-1;">
           <div style="font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px;">Status message</div>
@@ -1352,8 +1327,8 @@ function renderProfilePage(mc){
 
 // ── APP STATE (profile & org) ──
 let ORG_STATE={
-  orgName:'Acme Corp',orgInitials:'AC',orgAvatar:null,industry:'Apparel',timezone:'UTC+0 (London)',dateFmt:'MMM D, YYYY',
-  userName:'Sarah Chen',userInitials:'SC',userAvatar:null,userEmail:'sarah.chen@acmecorp.com',userRole:'Admin',userPhone:'',userStatusMsg:'',userStatus:'active',
+  orgName:CURRENT_USER.org_name,orgInitials:CURRENT_USER.org_name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2),orgAvatar:null,industry:'Apparel',timezone:'UTC+0 (London)',dateFmt:'MMM D, YYYY',
+  userName:CURRENT_USER.full_name,userInitials:CURRENT_USER.initials,userAvatar:null,userEmail:CURRENT_USER.email,userRole:CURRENT_USER.role,userPhone:'',userStatusMsg:'',userStatus:'active',
 };
 
 function handleUserPicUpload(inp){
@@ -1404,7 +1379,7 @@ function refreshUserAvatars(){
       rav.innerHTML=`<img src="${ORG_STATE.userAvatar}" style="display:block;width:30px;height:30px;object-fit:cover;border-radius:50%;"/>`;
       rav.style.padding='0';rav.style.overflow='hidden';
     } else {
-      rav.innerHTML=ORG_STATE.userInitials;rav.style.padding='';rav.style.overflow='';
+      rav.innerHTML=CURRENT_USER.initials;rav.style.padding='';rav.style.overflow='';
     }
   }
   // also update profile page avatar if visible
@@ -1413,7 +1388,7 @@ function refreshUserAvatars(){
     if(ORG_STATE.userAvatar){
       uav.innerHTML=`<img src="${ORG_STATE.userAvatar}" style="display:block;width:88px;height:88px;object-fit:cover;border-radius:50%;"/>`;
     } else {
-      uav.innerHTML=`<span style="letter-spacing:-1px;">${ORG_STATE.userInitials}</span>`;
+      uav.innerHTML=`<span style="letter-spacing:-1px;">${CURRENT_USER.initials}</span>`;
     }
   }
 }
@@ -1427,7 +1402,7 @@ function refreshOrgAvatars(){
   }
   // Update org name display
   const orgName=document.querySelector('.org-name');
-  if(orgName)orgName.textContent=ORG_STATE.orgName;
+  if(orgName)orgName.textContent=CURRENT_USER.org_name;
 }
 
 function saveProfile(){
@@ -1435,7 +1410,7 @@ function saveProfile(){
   const email=document.getElementById('pf-email')?.value.trim();
   const phone=document.getElementById('pf-phone')?.value.trim();
   const statusMsg=document.getElementById('pf-status')?.value.trim();
-  if(name){ORG_STATE.userName=name;ORG_STATE.userInitials=name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);}
+  if(name){CURRENT_USER.full_name=name;CURRENT_USER.initials=name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);}
   if(email)ORG_STATE.userEmail=email;
   if(phone!==undefined)ORG_STATE.userPhone=phone;
   if(statusMsg!==undefined)ORG_STATE.userStatusMsg=statusMsg;
@@ -1444,7 +1419,7 @@ function saveProfile(){
   const topLeft=document.getElementById('topbar')?.querySelector('.tb-left');
   if(topLeft&&currentView?.type==='profile'){
     const av=topLeft.querySelector('.tb-av');
-    if(av){if(ORG_STATE.userAvatar)av.innerHTML=`<img src="${ORG_STATE.userAvatar}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"/>`;else av.textContent=ORG_STATE.userInitials;}
+    if(av){if(ORG_STATE.userAvatar)av.innerHTML=`<img src="${ORG_STATE.userAvatar}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"/>`;else av.textContent=CURRENT_USER.initials;}
     const nm=topLeft.querySelector('.tb-name');if(nm)nm.textContent='My Profile';
   }
   showToast('Profile saved');
@@ -1455,7 +1430,7 @@ function saveOrgSettings(){
   const industry=document.getElementById('set-industry')?.value;
   const tz=document.getElementById('set-tz')?.value;
   const fmt=document.getElementById('set-datefmt')?.value;
-  if(name){ORG_STATE.orgName=name;ORG_STATE.orgInitials=name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);}
+  if(name){CURRENT_USER.org_name=name;ORG_STATE.orgInitials=name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);}
   if(industry)ORG_STATE.industry=industry;
   if(tz)ORG_STATE.timezone=tz;
   if(fmt)ORG_STATE.dateFmt=fmt;
@@ -1471,8 +1446,36 @@ function setUserStatus(status,el){
 
 // ── SIDEBAR RENDER ──
 function renderSidebar(){
+  // Render departments dynamically from DEPTS array
+  const deptsList=document.getElementById('depts-list');
+  if(deptsList){
+    deptsList.innerHTML='';
+    DEPTS.forEach(d=>{
+      const isOps=d.type==='operations'||d.subDepts;
+      if(isOps){
+        const wrap=document.createElement('div');
+        wrap.innerHTML=`
+          <div class="sbi" id="sb-ops" onclick="toggleOps(event)">
+            <div class="sbi-dot" style="background:${d.color};"></div>
+            <span class="sbi-lbl">${d.name}</span>
+            <span class="dept-arrow open" id="ops-arrow">›</span>
+          </div>
+          <div id="ops-subs">
+            <div id="subs-list"></div>
+            <div class="add-row" onclick="openModal('addSubdept')"><span>+ Add sub-department</span></div>
+          </div>`;
+        deptsList.appendChild(wrap);
+      } else {
+        const div=document.createElement('div');
+        div.className='sbi'+(currentView?.type==='dept'&&currentView.id===d.id?' active':'');
+        div.id='ni-'+d.id;
+        div.onclick=()=>openDept(d.id);
+        div.innerHTML=`<div class="sbi-dot" style="background:${d.color};"></div><span class="sbi-lbl">${d.name}</span>`;
+        deptsList.appendChild(div);
+      }
+    });
+  }
   renderSubsList();
-  renderDynDepts();
   renderGroupsList();
   renderDMsList();
 }
@@ -1862,7 +1865,7 @@ function sendMsg(key){
   const ci=document.getElementById('ci');if(!ci)return;
   const text=ci.value.trim();if(!text)return;
   const area=document.getElementById('msgs-area');if(!area)return;
-  const m={av:'SC',bg:'#2456A4',tc:'#fff',name:'Sarah Chen',text,time:nowTime(),mine:true};
+  const m={av:'SC',bg:'#2456A4',tc:'#fff',name:'${CURRENT_USER.full_name}',text,time:nowTime(),mine:true};
   if(!MSGS[key])MSGS[key]=[];MSGS[key].push(m);
   const div=document.createElement('div');div.innerHTML=buildMsg(m);
   area.appendChild(div.firstElementChild||div);
@@ -1871,7 +1874,7 @@ function sendMsg(key){
 function sendMsgSub(key){sendMsg(key);}
 
 // ── GROUP INFO ──
-const ALL_PPL={SC:{name:'Sarah Chen',role:'Admin',bg:'#2456A4',tc:'#fff'},JO:{name:'James Obi',role:'Operations Head',bg:'#FAECE7',tc:'#712B13'},AK:{name:'Ama Kofi',role:'Sewing Lead',bg:'#E6F1FB',tc:'#0C447C'},RK:{name:'Raj Kumar',role:'QC Head',bg:'#FAEEDA',tc:'#633806'},LB:{name:'Lena Boateng',role:'Packing Lead',bg:'#EAF3DE',tc:'#27500A'},MB:{name:'Mia Brown',role:'Accounts',bg:'#FAE8F5',tc:'#7B1A6A'},KS:{name:'Kwame Sarfo',role:'HR Manager',bg:'#E8F0FA',tc:'#1A4B7B'}};
+const ALL_PPL={SC:{name:'${CURRENT_USER.full_name}',role:'Admin',bg:'#2456A4',tc:'#fff'},JO:{name:'James Obi',role:'Operations Head',bg:'#FAECE7',tc:'#712B13'},AK:{name:'Ama Kofi',role:'Sewing Lead',bg:'#E6F1FB',tc:'#0C447C'},RK:{name:'Raj Kumar',role:'QC Head',bg:'#FAEEDA',tc:'#633806'},LB:{name:'Lena Boateng',role:'Packing Lead',bg:'#EAF3DE',tc:'#27500A'},MB:{name:'Mia Brown',role:'Accounts',bg:'#FAE8F5',tc:'#7B1A6A'},KS:{name:'Kwame Sarfo',role:'HR Manager',bg:'#E8F0FA',tc:'#1A4B7B'}};
 
 function showGroupInfo(id){
   const g=GROUPS.find(x=>x.id===id);if(!g)return;
@@ -2321,7 +2324,7 @@ function doDeleteStyle(si){
 
 // ── MEMBERS ──
 function renderMembers(mc,sd){
-  const ppl=[{av:'SC',bg:'#2456A4',tc:'#fff',n:'Sarah Chen',r:'Admin',o:true},{av:'JO',bg:'#FAECE7',tc:'#712B13',n:'James Obi',r:`${sd.name} Head`,o:true},{av:'AK',bg:'#E6F1FB',tc:'#0C447C',n:'Ama Kofi',r:'Operator',o:false}];
+  const ppl=[{av:'SC',bg:'#2456A4',tc:'#fff',n:'${CURRENT_USER.full_name}',r:'Admin',o:true},{av:'JO',bg:'#FAECE7',tc:'#712B13',n:'James Obi',r:`${sd.name} Head`,o:true},{av:'AK',bg:'#E6F1FB',tc:'#0C447C',n:'Ama Kofi',r:'Operator',o:false}];
   mc.innerHTML=`<div class="members-panel"><div class="members-list">
     ${ppl.map(m=>`<div class="member-row">
       <div class="member-av" style="background:${m.bg};color:${m.tc};">${m.av}</div>

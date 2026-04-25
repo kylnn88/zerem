@@ -37,14 +37,7 @@ export default function Onboard({ user, onComplete }) {
 
       if (profileError) throw profileError;
 
-      // Set up default departments and sub-departments
-      const { error: setupError } = await supabase
-        .rpc('setup_default_departments', {
-          p_org_id: org.id,
-          p_user_id: user.id,
-        });
-
-      if (setupError) throw setupError;
+  
 
       onComplete();
     } catch (err) {
