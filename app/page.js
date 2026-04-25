@@ -31,6 +31,17 @@ export default function Home() {
       .eq('id', user.id)
       .single();
     setProfile(data);
+    // If profile exists but setup not complete, check if there's a pending join request
+    if (data && !data.setup_complete) {
+      const { data: req } = await supabase
+        .from('join_requests')
+        .select('status')
+        .eq('user_id', user.id)
+        .single();
+      if (req) {
+        data._joinStatus = req.status;
+      }
+    }
     setLoading(false);
   }
 
@@ -47,6 +58,52 @@ export default function Home() {
   );
 
   if (!session) return <AuthPage />;
+
+  // Show waiting screen if join request is pending
+  if (profile && !profile.setup_complete && profile._joinStatus === 'pending') {
+    return (
+      <div style={{
+        width: '100vw', height: '100vh',
+        background: 'linear-gradient(135deg, #091529 0%, #0D1B3E 50%, #1B3A6B 100%)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        fontFamily: 'Plus Jakarta Sans, sans-serif',
+      }}>
+        <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+        <div style={{ width: '100%', maxWidth: '420px', padding: '0 20px', textAlign: 'center' }}>
+          <div style={{ width: '52px', height: '52px', borderRadius: '14px', background: '#1B3A6B', border: '1px solid #2456A4', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '22px', fontWeight: '800', color: '#fff', margin: '0 auto 20px' }}>Z</div>
+          <div style={{ fontSize: '22px', fontWeight: '700', color: '#fff', marginBottom: '8px' }}>Request pending</div>
+          <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.45)', marginBottom: '24px', lineHeight: '1.6' }}>
+            Your request to join the organisation is waiting for admin approval. You will be able to access Zerem once they approve it.
+          </div>
+          <div style={{ padding: '16px', background: 'rgba(59,125,216,0.15)', border: '1px solid rgba(59,125,216,0.3)', borderRadius: '10px', fontSize: '13px', color: '#7EB8FF', marginBottom: '20px' }}>
+            ⏳ Waiting for admin approval
+          </div>
+          <button onClick={() => checkProfile(session.user)} style={{ padding: '10px 24px', background: 'rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.6)', border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px', fontSize: '13px', cursor: 'pointer', fontFamily: 'inherit' }}>
+            Check again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Show rejected screen
+  if (profile && !profile.setup_complete && profile._joinStatus === 'rejected') {
+    return (
+      <div style={{
+        width: '100vw', height: '100vh',
+        background: 'linear-gradient(135deg, #091529 0%, #0D1B3E 50%, #1B3A6B 100%)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        fontFamily: 'Plus Jakarta Sans, sans-serif',
+      }}>
+        <div style={{ width: '100%', maxWidth: '420px', padding: '0 20px', textAlign: 'center' }}>
+          <div style={{ fontSize: '40px', marginBottom: '16px' }}>❌</div>
+          <div style={{ fontSize: '18px', fontWeight: '700', color: '#fff', marginBottom: '8px' }}>Request rejected</div>
+          <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.45)', marginBottom: '20px' }}>Your request to join was rejected by the admin. Please contact them directly.</div>
+          <button onClick={() => supabase.auth.signOut()} style={{ padding: '10px 24px', background: '#2456A4', color: '#fff', border: 'none', borderRadius: '8px', fontSize: '13px', cursor: 'pointer', fontFamily: 'inherit' }}>Sign out</button>
+        </div>
+      </div>
+    );
+  }
 
   if (!profile || !profile.setup_complete) return (
     <Onboard

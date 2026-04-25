@@ -726,7 +726,7 @@ let DEPTS=[];
 function openOrgPage(){
   currentView={type:'org'};
   const top=document.getElementById('topbar');
-  top.querySelector('.tb-left').innerHTML=`<div class="tb-av" style="width:30px;height:30px;border-radius:7px;background:var(--brand);color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;" id="org-page-av"></div><div class="tb-info"><div class="tb-name" id="org-page-name">My Org</div><div class="tb-sub" id="tb-sub">Organisation overview &middot; ${DEPTS.length} departments</div></div>`;
+  top.querySelector('.tb-left').innerHTML=`<div class="tb-av" style="width:30px;height:30px;border-radius:7px;background:var(--brand);color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;" id="org-page-av"></div><div class="tb-info"><div class="tb-name" id="org-page-name">${CURRENT_USER.org_name}</div><div class="tb-sub" id="tb-sub">Organisation overview &middot; ${DEPTS.length} departments</div></div>`;
   document.getElementById('tb-right').innerHTML=`<button class="tbb prim" onclick="openAddDeptModal()">+ Add department</button>`;
   document.getElementById('tabbar').classList.add('hidden');
   document.querySelectorAll('.sbi,.subdept-row,.sdr,.ni').forEach(e=>e.classList.remove('active','on'));
@@ -1075,11 +1075,81 @@ function openSettings(){
   const mc=document.getElementById('mc');
   mc.style.background='var(--bg)';
   renderSettingsPage(mc);
+  // Load join requests if admin
+  if(CURRENT_USER.role==='admin'){
+    loadJoinRequests();
+  }
+}
+
+async function loadJoinRequests(){
+  try {
+    const requests=await supaFetch('join_requests',{
+      filters:[
+        {key:'org_id',value:CURRENT_USER.org_id},
+        {key:'status',value:'pending'}
+      ]
+    });
+    const section=document.getElementById('join-requests-section');
+    const list=document.getElementById('join-requests-list');
+    if(!section||!list)return;
+    if(requests&&requests.length>0){
+      section.style.display='block';
+      list.innerHTML=requests.map(r=>`
+        <div style="display:flex;align-items:center;gap:12px;padding:10px 12px;background:var(--bg);border-radius:9px;border:1px solid var(--border);">
+          <div style="width:38px;height:38px;border-radius:50%;background:var(--brand);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;">
+            ${(r.full_name||r.email||'?').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2)}
+          </div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-size:13px;font-weight:600;color:var(--text);">${r.full_name||'Unknown'}</div>
+            <div style="font-size:11px;color:var(--text-3);">${r.email}</div>
+          </div>
+          <div style="display:flex;gap:6px;">
+            <button onclick="approveJoinRequest('${r.id}','${r.user_id}','${r.org_id}')" style="padding:6px 14px;background:var(--brand);color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;">Approve</button>
+            <button onclick="rejectJoinRequest('${r.id}')" style="padding:6px 14px;background:transparent;color:var(--error);border:1px solid var(--error);border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;">Reject</button>
+          </div>
+        </div>`).join('');
+    } else {
+      section.style.display='none';
+    }
+  } catch(e){ console.error(e); }
+}
+
+async function approveJoinRequest(reqId, userId, orgId){
+  try {
+    // Update join request status
+    const url=`${SUPA_URL}/rest/v1/join_requests?id=eq.${reqId}`;
+    await fetch(url,{method:'PATCH',headers:{'apikey':SUPA_KEY,'Authorization':`Bearer ${CURRENT_USER.access_token||SUPA_KEY}`,'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify({status:'approved'})});
+    // Update profile setup_complete
+    const url2=`${SUPA_URL}/rest/v1/profiles?id=eq.${userId}`;
+    await fetch(url2,{method:'PATCH',headers:{'apikey':SUPA_KEY,'Authorization':`Bearer ${CURRENT_USER.access_token||SUPA_KEY}`,'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify({setup_complete:true})});
+    showToast('Member approved — they can now access Zerem');
+    loadJoinRequests();
+  } catch(e){ showToast('Error approving request'); }
+}
+
+async function rejectJoinRequest(reqId){
+  try {
+    const url=`${SUPA_URL}/rest/v1/join_requests?id=eq.${reqId}`;
+    await fetch(url,{method:'PATCH',headers:{'apikey':SUPA_KEY,'Authorization':`Bearer ${CURRENT_USER.access_token||SUPA_KEY}`,'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify({status:'rejected'})});
+    showToast('Request rejected');
+    loadJoinRequests();
+  } catch(e){ showToast('Error rejecting request'); }
 }
 
 function renderSettingsPage(mc){
   mc.style.overflowY='auto';
   mc.innerHTML=`<div style="width:100%;max-width:700px;padding:20px 24px;display:flex;flex-direction:column;gap:18px;box-sizing:border-box;">
+
+    <!-- Join Requests section (admin only) -->
+    <div id="join-requests-section" style="display:none;background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;box-shadow:var(--shadow);">
+      <div style="padding:14px 18px;border-bottom:1px solid var(--border);background:#FFF8EB;">
+        <div style="font-size:13px;font-weight:700;color:var(--text);">⏳ Pending join requests</div>
+        <div style="font-size:11px;color:var(--text-3);margin-top:1px;">People waiting to join your organisation</div>
+      </div>
+      <div id="join-requests-list" style="padding:14px 18px;display:flex;flex-direction:column;gap:10px;">
+        <div style="font-size:13px;color:var(--text-3);">Loading...</div>
+      </div>
+    </div>
 
     <!-- Organisation section -->
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;box-shadow:var(--shadow);">
