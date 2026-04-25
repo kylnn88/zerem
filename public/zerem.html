@@ -575,8 +575,38 @@ async function loadStyles(){
         });
       });
       console.log('Loaded',STYLES.length,'styles');
+      // Load production logs
+      await loadProductionLogs();
     }
   } catch(e){ console.error('Load styles error',e); }
+}
+
+async function loadProductionLogs(){
+  if(!CURRENT_USER.org_id||CURRENT_USER.org_id==='demo')return;
+  try {
+    const logs=await supaFetch('production_logs',{
+      filters:[{key:'org_id',value:CURRENT_USER.org_id}]
+    });
+    if(!logs||!logs.length)return;
+    logs.forEach(log=>{
+      const s=STYLES.find(x=>x.dbId===log.style_id);
+      if(!s)return;
+      const sd=SUBS.find(x=>x.id===log.sub_dept_id);
+      if(!sd)return;
+      const logKey=gLog(sd);
+      if(!s[logKey])s[logKey]=[];
+      const existing=s[logKey].find(e=>e.day===log.day);
+      if(existing)existing.qty=log.qty;
+      else s[logKey].push({day:log.day,qty:log.qty});
+      // Update status
+      const total=gTotal(s[logKey]);
+      const oQ=tQty(s);
+      if(total>=oQ)s[sd.statusKey]='completed';
+      else if(total>0)s[sd.statusKey]='in-progress';
+      s[gDone(sd)]=total;
+    });
+    console.log('Loaded production logs');
+  } catch(e){ console.error('Load logs error',e); }
 }
 
 // ── CONSTANTS ──
@@ -2608,14 +2638,45 @@ function renderMembers(mc,sd){
 }
 
 // ── STATUS HANDLERS ──
-function setPSt(si,status){const s=STYLES[si];s.prepStatus=status;if(status==='completed')s.prepDone=tQty(s);else if(status==='not-started')s.prepDone=0;const next=SUBS[SUBS.findIndex(sd=>sd.id===currentView.id)+1];if(status==='completed'&&next)showToast(`${s.code} → ${next.name} available`);else showToast(`${s.code} → ${status.replace(/-/g,' ')}`);renderT2(document.getElementById('mc'));}
+async function setPSt(si,status){
+  const s=STYLES[si];
+  s.prepStatus=status;
+  if(status==='completed')s.prepDone=tQty(s);
+  else if(status==='not-started')s.prepDone=0;
+  const next=SUBS[SUBS.findIndex(sd=>sd.id===currentView.id)+1];
+  if(status==='completed'&&next)showToast(`${s.code} → ${next.name} available`);
+  else showToast(`${s.code} → ${status.replace(/-/g,' ')}`);
+  // Save to Supabase
+  if(s.dbId&&CURRENT_USER.org_id&&CURRENT_USER.org_id!=='demo'){
+    try {
+      const url=`${SUPA_URL}/rest/v1/styles?id=eq.${s.dbId}`;
+      await fetch(url,{method:'PATCH',headers:{'apikey':SUPA_KEY,'Authorization':`Bearer ${CURRENT_USER.access_token||SUPA_KEY}`,'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify({prep_status:status,prep_done:s.prepDone})});
+    } catch(e){ console.error('PrepStatus save error',e); }
+  }
+  renderT2(document.getElementById('mc'));
+}
 function cycleP(si){const c=['not-started','in-progress','completed'];const s=STYLES[si];s.prepStatus=c[(c.indexOf(s.prepStatus)+1)%3];if(s.prepStatus==='completed')s.prepDone=tQty(s);else if(s.prepStatus==='not-started')s.prepDone=0;renderT2(document.getElementById('mc'));}
 function valQ(inp,max){const v=parseInt(inp.value)||0;if(v>max){inp.value=max;inp.classList.add('warn');}else inp.classList.remove('warn');}
-function saveQ(sdId,si){
+async function saveQ(sdId,si){
   const sd=SUBS.find(s=>s.id===sdId);const s=STYLES[si];const inp=document.getElementById(`q-${sdId}-${si}`);const val=parseInt(inp?.value)||0;if(val<=0){showToast('Enter qty > 0');return;}
   const depDone=gDepDone(sd,s);const log=s[gLog(sd)]||[];const myT=gTotal(log);const canE=depDone-myT;if(val>canE){showToast(`Max: ${canE} pcs`);return;}
   if(!s[gLog(sd)])s[gLog(sd)]=[];const today=new Date().getDate();const te=s[gLog(sd)].find(e=>e.day===today);if(te)te.qty+=val;else s[gLog(sd)].push({day:today,qty:val});
   const nT=gTotal(s[gLog(sd)]);s[gDone(sd)]=nT;const oQ=tQty(s);if(nT>=oQ){s[sd.statusKey]='completed';}else if(nT>0){s[sd.statusKey]='in-progress';}
+  // Save to Supabase
+  if(CURRENT_USER.org_id&&CURRENT_USER.org_id!=='demo'&&s.dbId){
+    try {
+      const existing=await supaFetch('production_logs',{
+        filters:[{key:'style_id',value:s.dbId},{key:'sub_dept_id',value:sdId},{key:'day',value:String(today)}]
+      });
+      if(existing&&existing.length>0){
+        const url=`${SUPA_URL}/rest/v1/production_logs?id=eq.${existing[0].id}`;
+        await fetch(url,{method:'PATCH',headers:{'apikey':SUPA_KEY,'Authorization':`Bearer ${CURRENT_USER.access_token||SUPA_KEY}`,'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify({qty:existing[0].qty+val})});
+      } else {
+        await supaFetch('production_logs',{insert:{org_id:CURRENT_USER.org_id,style_id:s.dbId,sub_dept_id:sdId,day:today,qty:val}});
+      }
+      
+    } catch(e){ console.error('Log save error',e); }
+  }
   const next=SUBS[SUBS.findIndex(s2=>s2.id===sdId)+1];showToast(`Saved ${val} ${sd.recordLabel} for ${s.code}${nT>=oQ&&next?` → ${next.name} available`:''}`);if(inp)inp.value='';
   renderT3(document.getElementById('mc'),sd);
 }
