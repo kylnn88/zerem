@@ -1877,7 +1877,7 @@ async function renderMessages(mc,msgKey,channelName){
           };
           MSGS[msgKey].push(m);
           const div=document.createElement('div');
-          div.innerHTML=buildMsg(m);
+          div.innerHTML=buildMsg(m, msg.id);
           area.appendChild(div.firstElementChild||div);
         });
         area.scrollTop=area.scrollHeight;
@@ -1905,22 +1905,49 @@ async function renderMessages(mc,msgKey,channelName){
   }
 }
 
-function buildMsg(m){
+function buildMsg(m,msgId){
   if(m.sys)return`<div class="sys-pill">${m.sys}</div>`;
   const att=m.att?`<div class="att-card${m.mine?'':' light'}"><span class="att-icon">${m.att.icon||m.att.ico||'📎'}</span><div class="att-info"><div class="att-name">${m.att.name}</div><div class="att-sz">${m.att.size}</div></div></div>`:'';
   const rxn=m.rxn?`<div class="rxn-row">${m.rxn.map(r=>`<div class="rxn-pill">${r.e}<span>${r.n}</span></div>`).join('')}</div>`:'';
-  return`<div class="msg-group"><div class="msg-row${m.mine?' mine':''}">
-    ${!m.mine?`<div class="msg-av" style="background:${m.bg};color:${m.tc};">${m.av}</div>`:''}
-    <div class="msg-col">
-      ${!m.mine?`<div class="msg-sender">${m.name}</div>`:''}
-      <div class="bubble${m.mine?' mine':''}">${m.text}${att}</div>
-      ${rxn}
-      <div class="msg-time">${m.mine?'You · ':''}${m.time}${m.mine?' ✓✓':''}</div>
+  const deleteBtn=m.mine&&msgId?`<button onclick="deleteMsg('${msgId}')" style="opacity:0;transition:opacity .15s;border:none;background:none;cursor:pointer;color:var(--error);font-size:11px;padding:2px 6px;border-radius:4px;margin-left:4px;" class="msg-del-btn" title="Delete message">✕</button>`:'';
+  return`<div class="msg-group" ${msgId?`data-msg-id="${msgId}"`:''}
+    onmouseenter="this.querySelector('.msg-del-btn')&&(this.querySelector('.msg-del-btn').style.opacity='1')"
+    onmouseleave="this.querySelector('.msg-del-btn')&&(this.querySelector('.msg-del-btn').style.opacity='0')">
+    <div class="msg-row${m.mine?' mine':''}">
+      ${!m.mine?`<div class="msg-av" style="background:${m.bg};color:${m.tc};">${m.av}</div>`:''}
+      <div class="msg-col">
+        ${!m.mine?`<div class="msg-sender">${m.name}</div>`:''}
+        <div class="bubble${m.mine?' mine':''}">${m.text}${att}</div>
+        ${rxn}
+        <div class="msg-time" style="display:flex;align-items:center;">${m.mine?'You · ':''}${m.time}${m.mine?' ✓✓':''}${deleteBtn}</div>
+      </div>
+      ${m.mine?`<div class="msg-av" style="background:#2456A4;color:#fff;">${m.av||CURRENT_USER.initials}</div>`:''}
     </div>
-    ${m.mine?`<div class="msg-av" style="background:#2456A4;color:#fff;">${m.av||CURRENT_USER.initials}</div>`:''}
-  </div></div>`;
+  </div>`;
 }
-
+async function deleteMsg(msgId){
+  if(!confirm('Delete this message?'))return;
+  try {
+    // Delete from DOM
+    const el=document.querySelector(`[data-msg-id="${msgId}"]`);
+    if(el)el.remove();
+    // Delete from Supabase
+    if(CURRENT_USER.org_id&&CURRENT_USER.org_id!=='demo'){
+      const url=`${SUPA_URL}/rest/v1/messages?id=eq.${msgId}&user_id=eq.${CURRENT_USER.id}`;
+      await fetch(url,{
+        method:'DELETE',
+        headers:{
+          'apikey':SUPA_KEY,
+          'Authorization':`Bearer ${CURRENT_USER.access_token||SUPA_KEY}`,
+        }
+      });
+    }
+    showToast('Message deleted');
+  } catch(e){
+    console.error(e);
+    showToast('Error deleting message');
+  }
+}
 async function sendMsg(key){
   const ci=document.getElementById('ci');if(!ci)return;
   const text=ci.value.trim();if(!text)return;
