@@ -529,7 +529,13 @@ async function loadDepartments() {
           locked: s.locked || false,
           unread: 0,
           position: s.position || i,
+          statusKey: s.id + 'Status',
+          dependsOn: null, // will be set after all subs loaded
         });
+        // Set dependsOn based on position order
+SUBS.forEach((sub, idx) => {
+  if(idx > 0) sub.dependsOn = SUBS[idx-1].id;
+});
       });
     }
     
