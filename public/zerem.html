@@ -583,20 +583,10 @@ let SUBS=[
 ];
 
 // ── GROUPS ──
-let GROUPS=[
-  {id:'g-q3',name:'Q3 Launch',emoji:'🚀',color:'#EBF2FF',tc:'#0F2448',members:['SC','JO','AK','RK','LB'],desc:'Cross-team Q3 shipment & production coordination',unread:4},
-  {id:'g-ship',name:'Shipment Alerts',emoji:'🚢',color:'#EEF6FF',tc:'#0C447C',members:['SC','LB','RK'],desc:'Urgent shipping, customs, and export updates',unread:0},
-  {id:'g-fab',name:'Fabric & Materials',emoji:'🧵',color:'#FAEEDA',tc:'#633806',members:['SC','AK','JO'],desc:'Fabric arrivals, quality issues, accessories',unread:1},
-  {id:'g-mgmt',name:'Management',emoji:'🏛️',color:'#F4F0FF',tc:'#4A1D96',members:['SC','JO'],desc:'Leadership & management channel',unread:0},
-];
+let GROUPS=[];
 
 // ── DMS ──
-let DMS=[
-  {id:'dm-rk',name:'Raj Kumar',av:'RK',bg:'#FAEEDA',tc:'#633806',role:'QC Head',online:true,unread:0},
-  {id:'dm-jo',name:'James Obi',av:'JO',bg:'#FAECE7',tc:'#712B13',role:'Operations Head',online:true,unread:3},
-  {id:'dm-ak',name:'Ama Kofi',av:'AK',bg:'#E6F1FB',tc:'#0C447C',role:'Sewing Lead',online:false,unread:0},
-  {id:'dm-lb',name:'Lena Boateng',av:'LB',bg:'#EAF3DE',tc:'#27500A',role:'Packing Lead',online:false,unread:0},
-];
+let DMS=[];
 
 // ── MESSAGES ──
 const MSGS={
@@ -722,30 +712,7 @@ const MSGS={
 };
 
 // ── STYLES DATA ──
-const STYLES=[
-  {code:'ST-001',buyer:'Zara',fabric:'Jul 2',accessories:'Jul 5',shipDate:'Jul 18',month:0,week:0,
-   colours:[{name:'Navy Blue',qty:500,mode:'simple',sizes:[]},{name:'White',qty:400,mode:'simple',sizes:[]},{name:'Black',qty:300,mode:'simple',sizes:[]}],
-   monitor:{subId:'sewing',startDate:'Jul 8',finishDate:'Jul 16',dailyTarget:150},
-   prepStatus:'completed',prepDone:1200,
-   sewingStatus:'in-progress',sewingLog:[{day:1,qty:200},{day:2,qty:300},{day:3,qty:200},{day:4,qty:150},{day:5,qty:180}],
-   qcStatus:'not-started',qcLog:[],packingStatus:'not-started',packingLog:[]},
-  {code:'ST-002',buyer:'H&M',fabric:'Jul 4',accessories:'Jul 6',shipDate:'Jul 25',month:0,week:0,
-   colours:[{name:'White',qty:450,mode:'simple',sizes:[]},{name:'Pink',qty:350,mode:'simple',sizes:[]}],
-   monitor:{subId:'sewing',startDate:'Jul 10',finishDate:'Jul 20',dailyTarget:80},
-   prepStatus:'completed',prepDone:800,
-   sewingStatus:'in-progress',sewingLog:[{day:2,qty:200},{day:3,qty:200},{day:4,qty:120},{day:5,qty:80}],
-   qcStatus:'not-started',qcLog:[],packingStatus:'not-started',packingLog:[]},
-  {code:'ST-003',buyer:'Uniqlo',fabric:'Jul 10',accessories:'Jul 12',shipDate:'Aug 5',month:0,week:1,
-   colours:[{name:'Black',qty:1000,mode:'simple',sizes:[]},{name:'Charcoal',qty:1000,mode:'simple',sizes:[]}],
-   monitor:{subId:'sewing',startDate:'Jul 18',finishDate:'Aug 1',dailyTarget:140},
-   prepStatus:'in-progress',prepDone:600,
-   sewingStatus:'not-started',sewingLog:[],qcStatus:'not-started',qcLog:[],packingStatus:'not-started',packingLog:[]},
-  {code:'ST-004',buyer:'M&S',fabric:'Jul 15',accessories:'Jul 17',shipDate:'Aug 12',month:0,week:1,
-   colours:[{name:'Grey Melange',qty:600,mode:'simple',sizes:[]}],
-   monitor:{subId:'sewing',startDate:'Jul 22',finishDate:'Aug 8',dailyTarget:50},
-   prepStatus:'not-started',prepDone:0,
-   sewingStatus:'not-started',sewingLog:[],qcStatus:'not-started',qcLog:[],packingStatus:'not-started',packingLog:[]},
-];
+const STYLES=[];
 
 // ── HELPERS ──
 function tQty(s){return s.colours.reduce((a,c)=>a+c.qty,0);}
