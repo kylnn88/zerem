@@ -1597,6 +1597,7 @@ function toggleOps(e){
 // ── NAVIGATION ──
 function openSub(id){
   currentView={type:'subdept',id};activeTab='messages';
+  localStorage.setItem('lastView', JSON.stringify({type:'subdept',id}));
   const sd=SUBS.find(s=>s.id===id);if(!sd)return;
   sd.unread=0;
   setTopbar(sd.color,sd.name,`Type ${sd.type} · ${sd.label}`);
@@ -1607,6 +1608,7 @@ function openSub(id){
 
 function openDept(id){
   currentView={type:'dept',id};activeTab='messages';
+  localStorage.setItem('lastView', JSON.stringify({type:'dept',id}));
   // Look up from DEPTS array first, fallback to built-in maps
   const dData=DEPTS.find(d=>d.id===id);
   const name=dData?dData.name:{hr:'HR',accounts:'Accounts',operations:'Operations'}[id]||id;
@@ -1628,7 +1630,8 @@ function openDept(id){
 }
 
 function openGroup(id){
-  currentView={type:'group',id};activeTab='messages';
+  currentView={type:'group',id};
+  localStorage.setItem('lastView', JSON.stringify({type:'group',id}));activeTab='messages';
   const g=GROUPS.find(x=>x.id===id);if(!g)return;
   g.unread=0;
   const top=document.getElementById('topbar');
@@ -1647,7 +1650,8 @@ function openGroup(id){
 }
 
 function openDM(id){
-  currentView={type:'dm',id};activeTab='messages';
+  currentView={type:'dm',id};
+  localStorage.setItem('lastView', JSON.stringify({type:'dm',id}));activeTab='messages';
   const dm=DMS.find(x=>x.id===id);if(!dm)return;
   dm.unread=0;
   // topbar with user avatar
@@ -2769,7 +2773,23 @@ function closeOverlayClick(e){if(e.target===document.getElementById('overlay'))c
 
 // ── INIT ──
 renderSidebar();
-document.addEventListener('DOMContentLoaded', function(){ setTimeout(loadDepartments, 800); });
+document.addEventListener('DOMContentLoaded', function(){
+  setTimeout(function(){
+    loadDepartments().then(function(){
+      // Restore last view after departments load
+      try {
+        const last = localStorage.getItem('lastView');
+        if(last){
+          const v = JSON.parse(last);
+          if(v.type==='subdept') openSub(v.id);
+          else if(v.type==='dept') openDept(v.id);
+          else if(v.type==='group') openGroup(v.id);
+          else if(v.type==='dm') openDM(v.id);
+        }
+      } catch(e){}
+    });
+  }, 800);
+});
 </script>
 </body>
 </html>
