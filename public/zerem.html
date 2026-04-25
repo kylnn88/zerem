@@ -450,11 +450,12 @@ const CURRENT_USER = {
   role: URL_PARAMS.get('role') || 'member',
   org_name: URL_PARAMS.get('org_name') || 'My Organisation',
   email: URL_PARAMS.get('email') || '',
+  access_token: URL_PARAMS.get('access_token') || '',
   initials: (URL_PARAMS.get('full_name') || 'U').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2),
 };
 
 const SUPA_URL = 'https://fybsgyxegdvvgosfznxq.supabase.co';
-const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ5YnNneXhlZ2R2dmdvc2Z6bnhxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDU0ODg2NjMsImV4cCI6MjA2MTA2NDY2M30.l5DCjDN4BImMkBn6gCFe2IHNBByXN95IwEQfgqp-u2E';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ5YnNneXhlZ2R2dmdvc2Z6bnhxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcwMTU4NDEsImV4cCI6MjA5MjU5MTg0MX0.KAxqJSIeqCO4hy_69uhmMO1LO6yNbk6RGd5h3GoEu9A';
 
 async function supaFetch(table, options = {}) {
   const { select = '*', filters = [], insert = null, update = null } = options;
@@ -462,7 +463,7 @@ async function supaFetch(table, options = {}) {
   filters.forEach(f => { url += `&${f.key}=eq.${f.value}`; });
   const headers = {
     'apikey': SUPA_KEY,
-    'Authorization': `Bearer ${SUPA_KEY}`,
+    'Authorization': `Bearer ${CURRENT_USER.access_token || SUPA_KEY}`,
     'Content-Type': 'application/json',
     'Prefer': insert ? 'return=representation' : 'return=minimal',
   };
@@ -490,7 +491,7 @@ function updateUserUI() {
 }
 
 async function loadDepartments() {
-  if (!CURRENT_USER.org_id || CURRENT_USER.org_id === 'demo') return;
+  if (!CURRENT_USER.org_id || CURRENT_USER.org_id === 'demo') { console.log('No org_id found:', CURRENT_USER); return; }
   try {
     const depts = await supaFetch('departments', {
       filters: [{ key: 'org_id', value: CURRENT_USER.org_id }]
@@ -534,6 +535,7 @@ async function loadDepartments() {
     
 updateUserUI();
 renderSidebar();
+setTimeout(loadDepartments, 500);
   } catch(e) {
     console.log('Using demo data', e);
     
@@ -1498,7 +1500,7 @@ function renderDynDepts(){
 let dragSrcId=null;
 
 function renderSubsList(){
-  const list=document.getElementById('subs-list');list.innerHTML='';
+  const list=document.getElementById('subs-list');if(!list)return;list.innerHTML='';
   SUBS.forEach(sd=>{
     const isActive=currentView?.type==='subdept'&&currentView.id===sd.id;
     const div=document.createElement('div');
@@ -2667,6 +2669,7 @@ function closeOverlayClick(e){if(e.target===document.getElementById('overlay'))c
 
 // ── INIT ──
 renderSidebar();
+document.addEventListener('DOMContentLoaded', function(){ setTimeout(loadDepartments, 800); });
 </script>
 </body>
 </html>

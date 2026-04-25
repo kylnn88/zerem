@@ -48,9 +48,10 @@ export default function Home() {
 
   if (!session) return <AuthPage />;
 
-  if (!profile) return (
+  if (!profile || !profile.setup_complete) return (
     <Onboard
       user={session.user}
+      profile={profile}
       onComplete={() => checkProfile(session.user)}
     />
   );
@@ -63,6 +64,8 @@ export default function Home() {
       role: profile.role || 'member',
       org_name: profile.organisations?.name || '',
       email: session.user.email || '',
+      start: 'inbox',
+      access_token: session.access_token || '',
     });
     window.location.replace('/zerem.html?' + params.toString());
   }
