@@ -493,15 +493,24 @@ function updateUserUI() {
 async function loadDepartments() {
   if (!CURRENT_USER.org_id || CURRENT_USER.org_id === 'demo') { console.log('No org_id found:', CURRENT_USER); return; }
   try {
+    // Load department members first
+    const deptMembers=await supaFetch('department_members',{
+      filters:[{key:'org_id',value:CURRENT_USER.org_id}]
+    });
+
     const depts = await supaFetch('departments', {
       filters: [{ key: 'org_id', value: CURRENT_USER.org_id }]
     });
     const subs = await supaFetch('sub_departments', {
       filters: [{ key: 'org_id', value: CURRENT_USER.org_id }]
     });
+
     if (depts && depts.length > 0) {
       DEPTS.length = 0;
-      depts.forEach(d => {
+      const visibleDepts = CURRENT_USER.role === 'admin' ? depts : depts.filter(d =>
+        deptMembers && deptMembers.some(dm => dm.department_id === d.id && dm.user_id === CURRENT_USER.id)
+      );
+      visibleDepts.forEach(d => {
         DEPTS.push({
           id: d.id,
           name: d.name,
@@ -515,10 +524,13 @@ async function loadDepartments() {
         });
       });
     }
+
     if (subs && subs.length > 0) {
       SUBS.length = 0;
-      subs.sort((a,b) => (a.position||0) - (b.position||0));
-      subs.forEach((s, i) => {
+      const visibleDeptIds = DEPTS.map(d => d.id);
+      const visibleSubs = CURRENT_USER.role === 'admin' ? subs : subs.filter(s => visibleDeptIds.includes(s.department_id));
+      visibleSubs.sort((a,b) => (a.position||0) - (b.position||0));
+      visibleSubs.forEach((s, i) => {
         SUBS.push({
           id: s.id,
           name: s.name,
@@ -530,19 +542,14 @@ async function loadDepartments() {
           unread: 0,
           position: s.position || i,
           statusKey: s.id + 'Status',
-          dependsOn: null, // will be set after all subs loaded
+          dependsOn: null,
         });
-        // Set dependsOn based on position order
-SUBS.forEach((sub, idx) => {
-  if(idx > 0) sub.dependsOn = SUBS[idx-1].id;
-});
+      });
+      SUBS.forEach((sub, idx) => {
+        if(idx > 0) sub.dependsOn = SUBS[idx-1].id;
       });
     }
-    
-// Load department members
-    const deptMembers=await supaFetch('department_members',{
-      filters:[{key:'org_id',value:CURRENT_USER.org_id}]
-    });
+
     if(deptMembers&&deptMembers.length>0){
       deptMembers.forEach(dm=>{
         const dept=DEPTS.find(d=>d.id===dm.department_id);
@@ -551,10 +558,26 @@ SUBS.forEach((sub, idx) => {
         }
       });
     }
+
     updateUserUI();
     renderSidebar();
     loadStyles();
     loadOrgMembers();
+    // Load sub-department member assignments
+    const subMembers=await supaFetch('sub_department_members',{
+      filters:[{key:'org_id',value:CURRENT_USER.org_id}]
+    });
+    if(subMembers&&subMembers.length>0){
+      subMembers.forEach(sm=>{
+        const sub=SUBS.find(s=>s.id===sm.sub_dept_id);
+        if(sub){
+          if(!sub.assignedMembers)sub.assignedMembers=[];
+          if(!sub.assignedMembers.includes(sm.user_id)){
+            sub.assignedMembers.push(sm.user_id);
+          }
+        }
+      });
+    }
     if(currentView?.type==='org'){
       renderOrgPage(document.getElementById('mc'));
     }
@@ -1861,7 +1884,7 @@ function openSub(id){
   sd.unread=0;
   setTopbar(sd.color,sd.name,`Type ${sd.type} · ${sd.label}`);
   const tr=document.getElementById('tb-right');
-  tr.innerHTML=`${sd.type===1?`<button class="tbb prim" onclick="switchTab('input')">+ Add style</button>`:''}<button class="tbb" onclick="switchTab('styles')">All styles</button>${sd.type===3?`<button class="tbb" onclick="switchTab('log')">📋 Log</button>`:''}<button class="tbb" onclick="editSubModal('${id}')" title="Edit sub-department"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit</button>`;
+  tr.innerHTML=`${sd.type===1&&CURRENT_USER.role==='admin'?`<button class="tbb prim" onclick="switchTab('input')">+ Add style</button>`:''}<button class="tbb" onclick="switchTab('styles')">All styles</button>${sd.type===3?`<button class="tbb" onclick="switchTab('log')">📋 Log</button>`:''}<button class="tbb" onclick="switchTab('messages')">Messages</button>${CURRENT_USER.role==='admin'?`<button class="tbb" onclick="editSubModal('${id}')"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit</button>`:''}`;
   renderTabbar();renderContent();renderSidebar();
 }
 
@@ -2822,14 +2845,23 @@ async function doDeleteStyle(si){
 
 // ── MEMBERS ──
 function renderMembers(mc,sd){
-  const ppl=[{av:'SC',bg:'#2456A4',tc:'#fff',n:'${CURRENT_USER.full_name}',r:'Admin',o:true},{av:'JO',bg:'#FAECE7',tc:'#712B13',n:'James Obi',r:`${sd.name} Head`,o:true},{av:'AK',bg:'#E6F1FB',tc:'#0C447C',n:'Ama Kofi',r:'Operator',o:false}];
+  // Get assigned members for this sub-dept
+  const assignedIds=sd.assignedMembers||[];
+  // Admin always shown, plus assigned members
+  const adminMember={id:CURRENT_USER.id,full_name:CURRENT_USER.full_name,role:'Admin (you)',initials:CURRENT_USER.initials};
+  const assignedMembers=ORG_MEMBERS.filter(m=>m.id!==CURRENT_USER.id&&assignedIds.includes(m.id));
+  const allShown=[adminMember,...assignedMembers];
+
   mc.innerHTML=`<div class="members-panel"><div class="members-list">
-    ${ppl.map(m=>`<div class="member-row">
-      <div class="member-av" style="background:${m.bg};color:${m.tc};">${m.av}</div>
-      <div class="member-info"><div class="member-name">${m.n}</div><div class="member-role">${m.r}</div></div>
-      <div class="member-online" style="background:${m.o?'var(--brand2)':'var(--border)'}"></div>
-    </div>`).join('')}
-    <button style="width:100%;padding:8px;border:1px dashed var(--border);border-radius:8px;font-size:13px;color:var(--brand);background:transparent;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;" onclick="showToast('Invite member')">+ Add member</button>
+    ${allShown.map(m=>{
+      const initials=m.initials||(m.full_name||'?').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+      return`<div class="member-row">
+        <div class="member-av" style="background:#1B3A6B;color:#fff;">${initials}</div>
+        <div class="member-info"><div class="member-name">${m.full_name||'Unknown'}</div><div class="member-role">${m.role||'member'}</div></div>
+        <div class="member-online" style="background:var(--brand2)"></div>
+      </div>`;
+    }).join('')}
+    ${CURRENT_USER.role==='admin'?`<button style="width:100%;padding:8px;border:1px dashed var(--border);border-radius:8px;font-size:13px;color:var(--brand);background:transparent;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;" onclick="editSubModal('${sd.id}')">+ Assign members</button>`:''}
   </div></div>`;
 }
 
@@ -2993,6 +3025,18 @@ function editSubModal(id){
   showModalHTML(`<h3 style="margin-bottom:4px;">Edit sub-department</h3>
     <p style="font-size:12px;color:var(--text-3);margin-bottom:14px;">Type ${sd.type} · ${sd.label}</p>
     <label>Name</label><input id="esub-name" value="${sd.name}"/>
+    <label>Assign members</label>
+    <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px;max-height:150px;overflow-y:auto;">
+      ${ORG_MEMBERS.filter(m=>m.id!==CURRENT_USER.id).map(m=>{
+        const isAssigned=sd.assignedMembers&&sd.assignedMembers.includes(m.id);
+        return`<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--bg);border-radius:8px;border:1px solid var(--border);">
+          <div style="width:28px;height:28px;border-radius:50%;background:#1B3A6B;color:#fff;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0;">${(m.full_name||'?').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2)}</div>
+          <div style="flex:1;"><div style="font-size:13px;font-weight:600;color:var(--text);">${m.full_name||'Unknown'}</div><div style="font-size:11px;color:var(--text-3);">${m.role||'member'}</div></div>
+          <input type="checkbox" id="sdm-${m.id}" ${isAssigned?'checked':''} style="width:16px;height:16px;cursor:pointer;"/>
+        </div>`;
+      }).join('')}
+      ${ORG_MEMBERS.filter(m=>m.id!==CURRENT_USER.id).length===0?'<p style="font-size:12px;color:var(--text-3);text-align:center;padding:8px;">No other members in organisation.</p>':''}
+    </div>
     <label>Colour</label><div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;">${sw}</div>
     <div style="padding:10px 12px;background:${sd.locked?'#FEF9E7':'var(--bg)'};border:1px solid ${sd.locked?'#F5CBA7':'var(--border)'};border-radius:8px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between;gap:10px;">
       <div>
@@ -3022,16 +3066,34 @@ function toggleLockUI(){
   thumb.style.left=cb.checked?'21px':'3px';
 }
 
-function doSaveSub(id){
+async function doSaveSub(id){
   const sd=SUBS.find(s=>s.id===id);if(!sd)return;
   const name=document.getElementById('esub-name')?.value.trim();
   if(name)sd.name=name;
   sd.color=selColor;
   const lockCb=document.getElementById('esub-lock');
   if(lockCb)sd.locked=lockCb.checked;
+  // Save member assignments
+  if(CURRENT_USER.org_id&&CURRENT_USER.org_id!=='demo'){
+    try {
+      // Delete existing assignments
+      const delUrl=`${SUPA_URL}/rest/v1/sub_department_members?sub_dept_id=eq.${id}`;
+      await fetch(delUrl,{method:'DELETE',headers:{'apikey':SUPA_KEY,'Authorization':`Bearer ${CURRENT_USER.access_token||SUPA_KEY}`}});
+      // Save new assignments
+      const checked=ORG_MEMBERS.filter(m=>m.id!==CURRENT_USER.id&&document.getElementById('sdm-'+m.id)?.checked);
+      sd.assignedMembers=checked.map(m=>m.id);
+      for(const m of checked){
+        await supaFetch('sub_department_members',{insert:{sub_dept_id:id,user_id:m.id,org_id:CURRENT_USER.org_id}});
+      }
+    } catch(e){ console.error('Save sub members error',e); }
+  }
   closeModal();renderSidebar();
   if(currentView?.type==='subdept'&&currentView.id===id){
     setTopbar(sd.color,sd.name,`Type ${sd.type} · ${sd.label}`);
+    // Re-render members tab if active
+    if(activeTab==='members'){
+      renderMembers(document.getElementById('mc'),sd);
+    }
   }
   if(currentView?.type==='org')renderOrgPage(document.getElementById('mc'));
   showToast(sd.name+' updated');
