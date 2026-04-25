@@ -2637,14 +2637,38 @@ function doDeleteDM(id){
   renderSidebar();showToast('Conversation with '+name+' deleted');
 }
 
-function addSubdept(){
-  const name=document.getElementById('sd-name')?.value.trim();const type=parseInt(document.querySelector('#modal-body select')?.value)||3;const record=document.getElementById('sd-record')?.value.trim()||'pcs processed';
+async function addSubdept(){
+  const name=document.getElementById('sd-name')?.value.trim();
+  const type=parseInt(document.querySelector('#modal-body select')?.value)||3;
+  const record=document.getElementById('sd-record')?.value.trim()||'pcs processed';
   if(!name){showToast('Enter a name');return;}
   const locked=document.getElementById('sd-lock')?.checked||false;
-  const id='sub_'+Date.now();const dep=SUBS.filter(s=>s.type===3).pop()||SUBS.find(s=>s.type===2)||SUBS[0];
-  SUBS.push({id,name,type,color:selColor,label:`Daily qty — ${record}`,recordLabel:record,dependsOn:dep?.id,statusKey:id+'Status',unread:0,locked});
-  STYLES.forEach(s=>{s[id+'Status']='not-started';s[id+'Log']=[];});
-  closeModal();renderSidebar();showToast(`${name} created${locked?' (locked)':''}`);
+  const opsDept=DEPTS.find(d=>d.subDepts||d.name==='Operations');
+  if(!opsDept){showToast('No Operations department found');return;}
+  const position=SUBS.length;
+  try {
+    const result=await supaFetch('sub_departments',{
+      insert:{
+        department_id:opsDept.id,
+        org_id:CURRENT_USER.org_id,
+        name,type,
+        color:selColor,
+        label:type===3?`Daily qty — ${record}`:name,
+        record_label:record,
+        locked,
+        position,
+      }
+    });
+    if(result&&result[0]){
+      const s=result[0];
+      SUBS.push({id:s.id,name:s.name,type:s.type,color:s.color,label:s.label,recordLabel:s.record_label||record,locked:s.locked,unread:0,position:s.position});
+      closeModal();renderSidebar();showToast(`${name} created${locked?' (locked)':''}`);
+    } else {
+      showToast('Error saving sub-department');
+    }
+  } catch(e){
+    console.error(e);showToast('Error saving sub-department');
+  }
 }
 
 function createGroup(){
