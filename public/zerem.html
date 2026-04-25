@@ -542,6 +542,7 @@ SUBS.forEach((sub, idx) => {
 updateUserUI();
 renderSidebar();
 loadStyles();
+    loadOrgMembers();
   } catch(e) {
     console.log('Using demo data', e);
   }
@@ -992,12 +993,12 @@ async function doDeleteDept(id){
 }
 function openAddMemberDept(deptId){
   const d=DEPTS.find(x=>x.id===deptId);if(!d)return;
-  const avail=Object.entries(ALL_PPL).filter(([k])=>k!=='SC'&&!d.members.includes(k));
+  const avail=ORG_MEMBERS.filter(m=>m.id!==CURRENT_USER.id&&!d.members.includes(m.id));
   showModalHTML(`<h3 style="margin-bottom:10px;">Add member to ${d.name}</h3>
     <div style="display:flex;flex-direction:column;gap:6px;">
-      ${avail.map(([av,p])=>`<div class="pp-item" onclick="doAddMemberDept('${deptId}','${av}')">
-        <div style="width:30px;height:30px;border-radius:50%;background:${p.bg};color:${p.tc};display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0;">${av}</div>
-        <div><div style="font-size:13px;font-weight:600;color:var(--text);">${p.name}</div><div style="font-size:11px;color:var(--text-3);">${p.role}</div></div>
+      ${avail.map(m=>`<div class="pp-item" onclick="doAddMemberDept('${deptId}','${m.id}')">
+        <div style="width:30px;height:30px;border-radius:50%;background:#1B3A6B;color:#fff;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0;">${(m.full_name||'?').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2)}</div>
+        <div><div style="font-size:13px;font-weight:600;color:var(--text);">${m.full_name||'Unknown'}</div><div style="font-size:11px;color:var(--text-3);">${m.role||'member'}</div></div>
         <span style="font-size:11px;color:var(--brand);font-weight:500;">Add +</span>
       </div>`).join('')}
       ${avail.length===0?'<p style="font-size:13px;color:var(--text-3);text-align:center;padding:12px;">All members are already in this department.</p>':''}
@@ -1005,11 +1006,17 @@ function openAddMemberDept(deptId){
     <div class="m-btns" style="margin-top:10px;"><button class="mb prim" onclick="closeModal()">Done</button></div>`);
 }
 
-function doAddMemberDept(deptId,av){
-  const d=DEPTS.find(x=>x.id===deptId);if(!d||d.members.includes(av))return;
-  d.members.push(av);
-  const p=ALL_PPL[av];
-  showToast((p?p.name:av)+' added to '+d.name);
+async function doAddMemberDept(deptId,userId){
+  const d=DEPTS.find(x=>x.id===deptId);if(!d||d.members.includes(userId))return;
+  d.members.push(userId);
+  const m=ORG_MEMBERS.find(x=>x.id===userId);
+  // Save to Supabase
+  if(CURRENT_USER.org_id&&CURRENT_USER.org_id!=='demo'){
+    try {
+      await supaFetch('department_members',{insert:{department_id:deptId,user_id:userId,role:'member'}});
+    } catch(e){ console.error('Add member error',e); }
+  }
+  showToast((m?m.full_name:'Member')+' added to '+d.name);
   closeModal();renderOrgPage(document.getElementById('mc'));
 }
 
@@ -2229,7 +2236,25 @@ async function sendMsg(key){
 function sendMsgSub(key){sendMsg(key);}
 
 // ── GROUP INFO ──
-const ALL_PPL={SC:{name:'${CURRENT_USER.full_name}',role:'Admin',bg:'#2456A4',tc:'#fff'},JO:{name:'James Obi',role:'Operations Head',bg:'#FAECE7',tc:'#712B13'},AK:{name:'Ama Kofi',role:'Sewing Lead',bg:'#E6F1FB',tc:'#0C447C'},RK:{name:'Raj Kumar',role:'QC Head',bg:'#FAEEDA',tc:'#633806'},LB:{name:'Lena Boateng',role:'Packing Lead',bg:'#EAF3DE',tc:'#27500A'},MB:{name:'Mia Brown',role:'Accounts',bg:'#FAE8F5',tc:'#7B1A6A'},KS:{name:'Kwame Sarfo',role:'HR Manager',bg:'#E8F0FA',tc:'#1A4B7B'}};
+let ALL_PPL={};
+let ORG_MEMBERS=[];
+
+async function loadOrgMembers(){
+  if(!CURRENT_USER.org_id||CURRENT_USER.org_id==='demo')return;
+  try {
+    const members=await supaFetch('profiles',{
+      filters:[{key:'org_id',value:CURRENT_USER.org_id}]
+    });
+    if(members&&members.length>0){
+      ORG_MEMBERS=members;
+      ALL_PPL={};
+      members.forEach(m=>{
+        const initials=(m.full_name||'?').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+        ALL_PPL[m.id]={name:m.full_name||'Unknown',role:m.role||'member',bg:'#1B3A6B',tc:'#fff',initials,id:m.id};
+      });
+    }
+  } catch(e){ console.error('Load members error',e); }
+}
 
 function showGroupInfo(id){
   const g=GROUPS.find(x=>x.id===id);if(!g)return;
@@ -3187,6 +3212,7 @@ function closeOverlayClick(e){if(e.target===document.getElementById('overlay'))c
 // ── INIT ──
 renderSidebar();
 document.addEventListener('DOMContentLoaded', function(){
+  loadOrgMembers();
   setTimeout(function(){
     loadDepartments().then(function(){
       // Restore last view after departments load
