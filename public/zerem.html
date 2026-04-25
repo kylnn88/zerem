@@ -1863,10 +1863,10 @@ async function renderMessages(mc,msgKey,channelName){
         msgs.forEach(msg=>{
           const isMe=msg.user_id===CURRENT_USER.id;
           const m={
-            av:isMe?CURRENT_USER.initials:'?',
+            av:isMe?CURRENT_USER.initials:(msg.sender_initials||'?'),
             bg:isMe?'#2456A4':'#6B7280',
             tc:'#fff',
-            name:isMe?CURRENT_USER.full_name:'Team member',
+            name:isMe?CURRENT_USER.full_name:(msg.sender_name||'Team member'),
             text:msg.content,
             time:new Date(msg.created_at).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}),
             mine:isMe
@@ -1913,7 +1913,7 @@ function buildMsg(m){
       ${rxn}
       <div class="msg-time">${m.mine?'You · ':''}${m.time}${m.mine?' ✓✓':''}</div>
     </div>
-    ${m.mine?`<div class="msg-av" style="background:#2456A4;color:#fff;">SC</div>`:''}
+    ${m.mine?`<div class="msg-av" style="background:#2456A4;color:#fff;">${m.av||CURRENT_USER.initials}</div>`:''}
   </div></div>`;
 }
 
@@ -1942,6 +1942,8 @@ async function sendMsg(key){
           channel_id:key,
           user_id:CURRENT_USER.id,
           content:text,
+          sender_name:CURRENT_USER.full_name,
+          sender_initials:CURRENT_USER.initials,
         }
       });
     } catch(e){ console.error('Message save error',e); }
