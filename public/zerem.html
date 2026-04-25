@@ -2058,13 +2058,16 @@ async function sendMsg(key){
   if(!MSGS[key])MSGS[key]=[];
   MSGS[key].push(m);
   const div=document.createElement('div');
-  div.innerHTML=buildMsg(m);
-  area.appendChild(div.firstElementChild||div);
+  const pendingId='pending-msg-'+Date.now();
+  div.innerHTML=buildMsg(m, null);
+  const appendedEl = div.firstElementChild||div;
+  appendedEl.id=pendingId;
+  area.appendChild(appendedEl);
   ci.value='';ci.style.height='';area.scrollTop=area.scrollHeight;
   // Save to Supabase
   if(CURRENT_USER.org_id&&CURRENT_USER.org_id!=='demo'){
     try {
-      await supaFetch('messages',{
+      const result=await supaFetch('messages',{
         insert:{
           org_id:CURRENT_USER.org_id,
           channel_id:key,
@@ -2074,6 +2077,12 @@ async function sendMsg(key){
           sender_initials:CURRENT_USER.initials,
         }
       });
+      if(result&&result[0]){
+        const pendingEl=document.getElementById(pendingId);
+        if(pendingEl){
+          pendingEl.outerHTML=buildMsg(m,result[0].id);
+        }
+      }
     } catch(e){ console.error('Message save error',e); }
   }
 }
