@@ -329,7 +329,7 @@ table.lg tfoot td.tdc{background:#EBF2FF;}
 .member-online{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
 /* Modal */
 .overlay{position:fixed;inset:0;background:rgba(0,0,0,0.35);display:flex;align-items:center;justify-content:center;z-index:500;}
-.modal{background:var(--surface);border-radius:14px;padding:20px;width:340px;max-height:90vh;overflow-y:auto;border:1px solid var(--border);box-shadow:0 20px 60px rgba(0,0,0,0.15);animation:popIn 0.18s ease;}
+.modal{background:var(--surface);border-radius:14px;padding:20px;width:min(520px,90vw);max-height:90vh;overflow-y:auto;border:1px solid var(--border);box-shadow:0 20px 60px rgba(0,0,0,0.15);animation:popIn 0.18s ease;}
 @keyframes popIn{from{opacity:0;transform:scale(0.95);}to{opacity:1;transform:scale(1);}}
 .modal h3{font-size:16px;font-weight:700;color:var(--text);margin-bottom:4px;}
 .modal p{font-size:12px;color:var(--text-3);margin-bottom:12px;line-height:1.5;}
@@ -2512,10 +2512,10 @@ function editStyleModal(si){
       </div>
     </div>
 
-    <div style="background:#EBF2FF;border:1.5px solid #A8C3E8;border-radius:9px;padding:10px 12px;margin-bottom:12px;">
+    <div style="background:#EBF2FF;border:1.5px solid #A8C3E8;border-radius:9px;padding:10px 12px;margin-bottom:12px;box-sizing:border-box;width:100%;">
       <div style="font-size:11px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">🔵 Monitor</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
-        <div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%;box-sizing:border-box;">
+        <div style="grid-column:1/-1;">
           <label style="display:block;font-size:10px;font-weight:600;color:var(--blue);text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px;">Track dept</label>
           <select id="es-mon-sub" style="width:100%;padding:6px 9px;border:1.5px solid #A8C3E8;border-radius:6px;font-size:13px;font-family:inherit;color:var(--text);outline:none;">${t3Opts}</select>
         </div>
@@ -2546,7 +2546,7 @@ function editStyleModal(si){
     </div>`);
 }
 
-function saveStyle(si){
+async function saveStyle(si){
   const s=STYLES[si];if(!s)return;
 
   // ── Collect values ──
@@ -2648,6 +2648,24 @@ function saveStyle(si){
   }
   if(qtyChanged){
     notes.push(`Qty changed ${oldTotal.toLocaleString()} → ${newTotal.toLocaleString()} pcs. Production statuses recalculated.`);
+  }
+
+  // Save to Supabase
+  if(s.dbId&&CURRENT_USER.org_id&&CURRENT_USER.org_id!=='demo'){
+    try {
+      const url=`${SUPA_URL}/rest/v1/styles?id=eq.${s.dbId}`;
+      await fetch(url,{method:'PATCH',headers:{'apikey':SUPA_KEY,'Authorization':`Bearer ${CURRENT_USER.access_token||SUPA_KEY}`,'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify({
+        code:s.code,
+        buyer:s.buyer,
+        fabric:s.fabric,
+        accessories:s.accessories,
+        ship_date:s.shipDate,
+        week:s.week||s.wk||0,
+        colours:JSON.stringify(s.colours),
+        monitor:JSON.stringify(s.monitor),
+        prep_done:s.prepDone,
+      })});
+    } catch(e){ console.error('Edit style save error',e); }
   }
 
   closeModal();
