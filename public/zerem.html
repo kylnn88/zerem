@@ -2297,9 +2297,7 @@ function submitStyle(){
   if(dMonStart&&dFab&&dMonStart<=dFab)
     errors.push('Monitor start must be after fabric arrival date.');
 
-  if(dMonStart&&dAcc&&dMonStart>dAcc)
-    errors.push('Monitor start must be on or before accessories date.');
-
+  
   if(dMonFin&&dShip&&dMonFin>=dShip)
     errors.push('Monitor finish must be strictly before ship date.');
 
