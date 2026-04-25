@@ -940,15 +940,23 @@ function doSaveDept(id){
   closeModal();renderSidebar();renderOrgPage(document.getElementById('mc'));showToast(d.name+' updated');
 }
 
-function doDeleteDept(id){
+async function doDeleteDept(id){
   const d=DEPTS.find(x=>x.id===id);if(!d)return;
-  if(['operations','hr','accounts'].includes(id)){showToast('Cannot delete built-in departments');return;}
   DEPTS.splice(DEPTS.findIndex(x=>x.id===id),1);
-  closeModal();renderSidebar();renderOrgPage(document.getElementById('mc'));
-  document.getElementById('tb-sub').textContent='Organisation overview \u00b7 '+DEPTS.length+' departments';
+  closeModal();
+  // Delete from Supabase
+  if(CURRENT_USER.org_id&&CURRENT_USER.org_id!=='demo'){
+    try {
+      const url=`${SUPA_URL}/rest/v1/departments?id=eq.${id}`;
+      await fetch(url,{method:'DELETE',headers:{'apikey':SUPA_KEY,'Authorization':`Bearer ${CURRENT_USER.access_token||SUPA_KEY}`}});
+    } catch(e){ console.error('Delete dept error',e); }
+  }
+  renderSidebar();
+  renderOrgPage(document.getElementById('mc'));
+  const tbSub=document.getElementById('tb-sub');
+  if(tbSub)tbSub.textContent='Organisation overview \u00b7 '+DEPTS.length+' departments';
   showToast(d.name+' removed');
 }
-
 function openAddMemberDept(deptId){
   const d=DEPTS.find(x=>x.id===deptId);if(!d)return;
   const avail=Object.entries(ALL_PPL).filter(([k])=>k!=='SC'&&!d.members.includes(k));
