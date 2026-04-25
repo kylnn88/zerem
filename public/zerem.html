@@ -1078,9 +1078,27 @@ function openSettings(){
   // Load join requests if admin
   if(CURRENT_USER.role==='admin'){
     setTimeout(loadJoinRequests, 100);
+    setTimeout(loadOrgCode, 100);
   }
 }
+async function loadOrgCode(){
+  try {
+    const orgs = await supaFetch('organisations', {
+      select: 'org_code',
+      filters: [{key: 'id', value: CURRENT_USER.org_id}]
+    });
+    if(orgs && orgs[0]){
+      const el = document.getElementById('org-code-display');
+      if(el) el.textContent = orgs[0].org_code || 'N/A';
+    }
+  } catch(e){ console.error(e); }
+}
 
+function copyOrgCode(){
+  const code = document.getElementById('org-code-display')?.textContent;
+  if(!code || code === 'Loading...') return;
+  navigator.clipboard.writeText(code).then(() => showToast('Organisation code copied!'));
+}
 async function loadJoinRequests(){
   try {
     const requests=await supaFetch('join_requests',{
@@ -1158,6 +1176,15 @@ function renderSettingsPage(mc){
         <div style="font-size:11px;color:var(--text-3);margin-top:1px;">Workspace identity and branding</div>
       </div>
       <div style="padding:18px;">
+        <!-- Org code -->
+        ${CURRENT_USER.role==='admin'?`<div style="display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:#EBF2FF;border:1.5px solid #A8C3E8;border-radius:9px;margin-bottom:16px;">
+          <div>
+            <div style="font-size:11px;font-weight:700;color:#1B3A6B;text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px;">Organisation code</div>
+            <div style="font-size:18px;font-weight:800;color:#1B3A6B;letter-spacing:3px;" id="org-code-display">Loading...</div>
+            <div style="font-size:11px;color:#2456A4;margin-top:2px;">Share this code with team members so they can request to join</div>
+          </div>
+          <button onclick="copyOrgCode()" style="padding:7px 14px;background:#1B3A6B;color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;">Copy code</button>
+        </div>`:''}
         <!-- Org avatar upload -->
         <div style="display:flex;align-items:center;gap:18px;margin-bottom:20px;padding:14px 16px;background:var(--bg);border-radius:10px;border:1px solid var(--border);">
           <div style="position:relative;flex-shrink:0;">
