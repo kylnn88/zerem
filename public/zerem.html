@@ -535,10 +535,42 @@ async function loadDepartments() {
     
 updateUserUI();
 renderSidebar();
+loadStyles();
   } catch(e) {
     console.log('Using demo data', e);
-    
   }
+}
+
+async function loadStyles(){
+  if(!CURRENT_USER.org_id||CURRENT_USER.org_id==='demo')return;
+  try {
+    const result=await supaFetch('styles',{
+      filters:[{key:'org_id',value:CURRENT_USER.org_id}]
+    });
+    if(result&&result.length>0){
+      STYLES.length=0;
+      result.forEach(s=>{
+        STYLES.push({
+          dbId:s.id,
+          code:s.code,
+          buyer:s.buyer,
+          fabric:s.fabric||'',
+          accessories:s.accessories||'',
+          shipDate:s.ship_date||'',
+          month:s.month||0,
+          week:s.week||0,
+          colours:typeof s.colours==='string'?JSON.parse(s.colours):s.colours||[],
+          monitor:typeof s.monitor==='string'?JSON.parse(s.monitor):s.monitor||{},
+          prepStatus:s.prep_status||'not-started',
+          prepDone:s.prep_done||0,
+          sewingStatus:'not-started',sewingLog:[],
+          qcStatus:'not-started',qcLog:[],
+          packingStatus:'not-started',packingLog:[],
+        });
+      });
+      console.log('Loaded',STYLES.length,'styles');
+    }
+  } catch(e){ console.error('Load styles error',e); }
 }
 
 // ── CONSTANTS ──
@@ -2186,7 +2218,26 @@ function submitStyle(){
   const monSubId=document.getElementById('mon-sub')?.value||'sewing';
   const rows=document.querySelectorAll('.cr');const colours=[];
   rows.forEach(row=>{const idx=parseInt(row.dataset.idx);const name=document.getElementById('cn-'+idx)?.value.trim()||'Colour '+(idx+1);const qty=parseInt(document.getElementById('cq-'+idx)?.value)||0;const mode=colourRowModes[idx]||'simple';const sI=row.closest('.rw')?.querySelectorAll('.szrow input');const sizes=mode==='detailed'?Array.from(sI||[]).map((inp,i)=>({s:SIZES[i],q:parseInt(inp.value)||0})).filter(s=>s.q>0):[];colours.push({name,qty,mode,sizes});});
-  STYLES.push({code,buyer,fabric:fmtD(document.getElementById('f-fabric')?.value),accessories:fmtD(document.getElementById('f-acc')?.value),shipDate:fmtD(document.getElementById('f-ship')?.value),month:activeMonth,week:activeWeek,colours,monitor:{subId:monSubId,startDate:fmtD(document.getElementById('mon-start')?.value),finishDate:fmtD(document.getElementById('mon-finish')?.value),dailyTarget:parseInt(document.getElementById('mon-target')?.value)||0},prepStatus:'not-started',prepDone:0,sewingStatus:'not-started',sewingLog:[],qcStatus:'not-started',qcLog:[],packingStatus:'not-started',packingLog:[]});
+  const newStyle={code,buyer,fabric:fmtD(document.getElementById('f-fabric')?.value),accessories:fmtD(document.getElementById('f-acc')?.value),shipDate:fmtD(document.getElementById('f-ship')?.value),month:activeMonth,week:activeWeek,colours,monitor:{subId:monSubId,startDate:fmtD(document.getElementById('mon-start')?.value),finishDate:fmtD(document.getElementById('mon-finish')?.value),dailyTarget:parseInt(document.getElementById('mon-target')?.value)||0},prepStatus:'not-started',prepDone:0,sewingStatus:'not-started',sewingLog:[],qcStatus:'not-started',qcLog:[],packingStatus:'not-started',packingLog:[]};
+  STYLES.push(newStyle);
+  // Save to Supabase
+  if(CURRENT_USER.org_id&&CURRENT_USER.org_id!=='demo'){
+    supaFetch('styles',{insert:{
+      org_id:CURRENT_USER.org_id,
+      code,buyer,
+      fabric:newStyle.fabric,
+      accessories:newStyle.accessories,
+      ship_date:newStyle.shipDate,
+      month:activeMonth,
+      week:activeWeek,
+      colours:JSON.stringify(colours),
+      monitor:JSON.stringify(newStyle.monitor),
+      prep_status:'not-started',
+      prep_done:0,
+    }}).then(result=>{
+      if(result&&result[0])newStyle.dbId=result[0].id;
+    }).catch(e=>console.error('Style save error',e));
+  }
   showToast(`${code} added`);renderT1(document.getElementById('mc'));
 }
 
