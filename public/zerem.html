@@ -903,17 +903,43 @@ function openAddDeptModal(){
     <div class="modal-btns"><button class="mbb" onclick="closeModal()">Cancel</button><button class="mbb prim" onclick="doCreateDept()">Create department</button></div>`);
 }
 
-function doCreateDept(){
+async function doCreateDept(){
   const name=document.getElementById('nd-name')?.value.trim();
   if(!name){showToast('Please enter a department name');return;}
   const desc=document.getElementById('nd-desc')?.value.trim()||'';
   const head=document.getElementById('nd-head')?.value.trim()||'';
-  const id='dept_'+Date.now();
   const abbr=name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,3);
+  const type=name.toLowerCase()==='operations'?'operations':'general';
+  // Save to Supabase first to get real ID
+  if(CURRENT_USER.org_id&&CURRENT_USER.org_id!=='demo'){
+    try {
+      const result=await supaFetch('departments',{insert:{
+        org_id:CURRENT_USER.org_id,
+        name,
+        type,
+        color:selColor,
+        icon:abbr,
+        description:desc,
+      }});
+      if(result&&result[0]){
+        const d=result[0];
+        DEPTS.push({id:d.id,name,icon:abbr,color:selColor,colorBg:selColor+'22',desc,head,headAv:'',members:[],subDepts:type==='operations'});
+        if(!MSGS[d.id])MSGS[d.id]=[];
+        closeModal();renderSidebar();renderOrgPage(document.getElementById('mc'));
+        const tbSub=document.getElementById('tb-sub');
+        if(tbSub)tbSub.textContent='Organisation overview \u00b7 '+DEPTS.length+' departments';
+        showToast(name+' created');
+        return;
+      }
+    } catch(e){ console.error('Create dept error',e); }
+  }
+  // Fallback for demo mode
+  const id='dept_'+Date.now();
   DEPTS.push({id,name,icon:abbr,color:selColor,colorBg:selColor+'22',desc,head,headAv:'',members:[],subDepts:false});
   if(!MSGS[id])MSGS[id]=[];
   closeModal();renderSidebar();renderOrgPage(document.getElementById('mc'));
-  document.getElementById('tb-sub').textContent='Organisation overview \u00b7 '+DEPTS.length+' departments';
+  const tbSub=document.getElementById('tb-sub');
+  if(tbSub)tbSub.textContent='Organisation overview \u00b7 '+DEPTS.length+' departments';
   showToast(name+' created');
 }
 
@@ -930,13 +956,20 @@ function openEditDept(id){
     </div>`);
 }
 
-function doSaveDept(id){
+async function doSaveDept(id){
   const d=DEPTS.find(x=>x.id===id);if(!d)return;
   d.name=document.getElementById('ed-name')?.value.trim()||d.name;
   d.desc=document.getElementById('ed-desc')?.value.trim()||d.desc;
   d.head=document.getElementById('ed-head')?.value.trim()||d.head;
   const abbr=d.name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,3);
   if(!['OPS','HR','ACC'].includes(d.icon))d.icon=abbr;
+  // Save to Supabase
+  if(CURRENT_USER.org_id&&CURRENT_USER.org_id!=='demo'){
+    try {
+      const url=`${SUPA_URL}/rest/v1/departments?id=eq.${id}`;
+      await fetch(url,{method:'PATCH',headers:{'apikey':SUPA_KEY,'Authorization':`Bearer ${CURRENT_USER.access_token||SUPA_KEY}`,'Content-Type':'application/json','Prefer':'return=minimal'},body:JSON.stringify({name:d.name,description:d.desc,icon:d.icon})});
+    } catch(e){ console.error('Save dept error',e); }
+  }
   closeModal();renderSidebar();renderOrgPage(document.getElementById('mc'));showToast(d.name+' updated');
 }
 
