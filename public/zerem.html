@@ -380,6 +380,19 @@ table.lg tfoot td.tdc{background:#EBF2FF;}
       <div class="sb-org" onclick="openOrgPage()" style="cursor:pointer;">
         <div class="org-av" id="org-av-el"></div>
         <span class="org-name" id="org-name-el"></span>
+<script>
+  (function(){
+    var p=new URLSearchParams(window.location.search);
+    var n=p.get('org_name')||'My Organisation';
+    var el=document.getElementById('org-name-el');
+    if(el)el.textContent=n;
+    var av=document.getElementById('org-av-el');
+    if(av)av.textContent=n.split(' ').map(function(w){return w[0];}).join('').toUpperCase().slice(0,2);
+    var rav=document.getElementById('user-rav');
+    var fn=p.get('full_name')||'U';
+    if(rav)rav.textContent=fn.split(' ').map(function(w){return w[0];}).join('').toUpperCase().slice(0,2);
+  })();
+</script>
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>
       </div>
       <input class="sb-search" placeholder="🔍  Search..." id="sb-search" oninput="handleSearch(this.value)"/>
@@ -534,8 +547,7 @@ async function loadDepartments() {
       });
     }
     
-setTimeout(updateUserUI, 1000);    
-loadDepartments();
+updateUserUI();
 renderSidebar();
   } catch(e) {
     console.log('Using demo data', e);
