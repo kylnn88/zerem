@@ -113,6 +113,7 @@ export default function Home() {
     />
   );
 
+  setLoading(true);
   if (typeof window !== 'undefined') {
     const params = new URLSearchParams({
       user_id: session.user.id,

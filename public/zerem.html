@@ -887,7 +887,16 @@ function renderContactsPage(mc){
 }
 
 function startDM(userId, name){
-  showToast('DMs coming soon — ' + name);
+  const dmKey=[CURRENT_USER.id, userId].sort().join('_');
+  const initials=(name||'?').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+  // Check if DM already exists in list
+  let dm=DMS.find(d=>d.id===dmKey);
+  if(!dm){
+    dm={id:dmKey,name,initials,bg:'#1B3A6B',tc:'#fff',unread:0,userId};
+    DMS.push(dm);
+  }
+  renderSidebar();
+  openDM(dmKey);
 }
 
 function renderOrgPage(mc){
@@ -1894,9 +1903,9 @@ function renderDMsList(){
   DMS.forEach(dm=>{
     const isActive=currentView?.type==='dm'&&currentView.id===dm.id;
     const div=document.createElement('div');div.className='sbi'+(isActive?' active':'');div.onclick=()=>openDM(dm.id);
-    div.innerHTML=`<div class="sbi-av" style="background:${dm.bg};color:${dm.tc};">${dm.av}</div>
+    const initials=dm.initials||(dm.name||'?').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+    div.innerHTML=`<div class="sbi-av" style="background:#1B3A6B;color:#fff;">${initials}</div>
       <span class="sbi-lbl">${dm.name}</span>
-      ${dm.online?'<div class="online-dot"></div>':''}
       ${dm.unread>0?`<span class="sbi-badge">${dm.unread}</span>`:''}`;
     list.appendChild(div);
   });
@@ -1965,22 +1974,24 @@ function openGroup(id){
 
 function openDM(id){
   currentView={type:'dm',id};
-  localStorage.setItem('lastView', JSON.stringify({type:'dm',id}));activeTab='messages';
+  localStorage.setItem('lastView', JSON.stringify({type:'dm',id}));
+  activeTab='messages';
   const dm=DMS.find(x=>x.id===id);if(!dm)return;
   dm.unread=0;
-  // topbar with user avatar
+  const initials=dm.initials||(dm.name||'?').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
   const topbar=document.getElementById('topbar');
   topbar.querySelector('.tb-left').innerHTML=`
-    <div class="tb-av" style="background:${dm.bg};color:${dm.tc};">${dm.av}</div>
+    <div class="tb-av" style="background:#1B3A6B;color:#fff;">${initials}</div>
     <div class="tb-info">
       <div class="tb-title">${dm.name}</div>
-      <div class="tb-sub"><span class="dm-status"><span class="dm-online" style="background:${dm.online?'var(--brand2)':'var(--border)'}"></span>${dm.online?'Active now':dm.role}</span></div>
+      <div class="tb-sub">Direct message</div>
     </div>`;
-  document.getElementById('tb-right').innerHTML=`<button class="tbb" onclick="showToast('Call coming soon')"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.15 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.07 1.18h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L7.06 8.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>Call</button><button class="tbb" onclick="editDMModal('${id}')"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg> Edit</button>`;
+  document.getElementById('tb-right').innerHTML='';
   document.getElementById('tabbar').innerHTML='';
   document.getElementById('tabbar').classList.add('hidden');
   if(!MSGS[id])MSGS[id]=[];
-  renderChatOnly(id);renderSidebar();
+  renderMessages(document.getElementById('mc'),id,dm.name);
+  renderSidebar();
 }
 
 function setTopbar(dotColor,title,sub){
