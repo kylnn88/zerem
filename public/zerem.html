@@ -824,7 +824,7 @@ async function loadDMList(){
 
 function renderOrgPage(mc){
   mc.style.overflowY='auto';
-  const totalMembers=new Set(DEPTS.flatMap(d=>d.members).concat(['SC'])).size;
+  const totalMembers=ORG_MEMBERS.length||new Set(DEPTS.flatMap(d=>d.members).concat([CURRENT_USER.id])).size;
   mc.innerHTML=`<div style="width:100%;padding:16px 18px;display:flex;flex-direction:column;gap:14px;box-sizing:border-box;">
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;">
       <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:13px 16px;display:flex;align-items:center;gap:12px;">
