@@ -784,6 +784,10 @@ async function startDM(userId, name){
     if(CURRENT_USER.org_id&&CURRENT_USER.org_id!=='demo'){
       try{
         await supaFetch('dm_list',{insert:{id:dmKey,user1_id:CURRENT_USER.id,user2_id:userId,org_id:CURRENT_USER.org_id,user2_name:name,user2_initials:initials}});
+      // Also create reverse entry for the other person
+      const reverseKey=dmKey; // same key, both share it
+      const myInitials=CURRENT_USER.initials||(CURRENT_USER.full_name||'?').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+      await supaFetch('dm_list',{insert:{id:dmKey+'_r',user1_id:userId,user2_id:CURRENT_USER.id,org_id:CURRENT_USER.org_id,user2_name:CURRENT_USER.full_name,user2_initials:myInitials}}).catch(()=>{});
       } catch(e){ console.error('Save DM error',e); }
     }
   }
@@ -796,11 +800,22 @@ function saveDMList(){}
 async function loadDMList(){
   if(!CURRENT_USER.org_id||CURRENT_USER.org_id==='demo')return;
   try{
-    const dms=await supaFetch('dm_list',{filters:[{key:'user1_id',value:CURRENT_USER.id}]});
-    if(dms&&dms.length>0){
+    const [dms1, dms2] = await Promise.all([
+      supaFetch('dm_list',{filters:[{key:'user1_id',value:CURRENT_USER.id}]}),
+      supaFetch('dm_list',{filters:[{key:'user2_id',value:CURRENT_USER.id}]})
+    ]);
+    const allDms=[...(dms1||[]),...(dms2||[])];
+    if(allDms.length>0){
       DMS.length=0;
-      dms.forEach(dm=>{
-        DMS.push({id:dm.id,name:dm.user2_name,initials:dm.user2_initials||(dm.user2_name||'?').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2),bg:'#1B3A6B',tc:'#fff',unread:0,userId:dm.user2_id});
+      allDms.forEach(dm=>{
+        const isUser1=dm.user1_id===CURRENT_USER.id;
+        const otherId=isUser1?dm.user2_id:dm.user1_id;
+        const otherName=isUser1?dm.user2_name:(ORG_MEMBERS.find(m=>m.id===dm.user1_id)?.full_name||'Unknown');
+        const otherInitials=(otherName||'?').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+        const dmKey=[CURRENT_USER.id,otherId].sort().join('_');
+        if(!DMS.find(d=>d.id===dmKey)){
+          DMS.push({id:dmKey,name:otherName,initials:otherInitials,bg:'#1B3A6B',tc:'#fff',unread:0,userId:otherId});
+        }
       });
       renderSidebar();
     }
@@ -3364,6 +3379,7 @@ async function loadGroupList(){
     ]);
     if(groups&&groups.length>0){
       GROUPS.length=0;
+      // Only show groups where current user is a member
       const myGroupIds=members?members.filter(m=>m.user_id===CURRENT_USER.id).map(m=>m.group_id):[];
       groups.filter(g=>myGroupIds.includes(g.id)).forEach(g=>{
         const groupMembers=members?members.filter(m=>m.group_id===g.id).map(m=>m.user_id):[];
@@ -3375,8 +3391,8 @@ async function loadGroupList(){
           tc:g.tc||'#1B3A6B',
           desc:g.description||'',
           members:groupMembers,
-          unread:0,
           created_by:g.created_by,
+          unread:0,
         });
       });
       renderSidebar();
