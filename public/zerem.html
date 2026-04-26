@@ -565,6 +565,7 @@ async function loadDepartments() {
     loadOrgMembers();
     loadDMList();
     loadGroupList();
+    renderSidebar();
     // Load sub-department member assignments
     const subMembers=await supaFetch('sub_department_members',{
       filters:[{key:'org_id',value:CURRENT_USER.org_id}]
@@ -773,44 +774,37 @@ function renderContactsPage(mc){
   </div>`;
 }
 
-function startDM(userId, name){
+async function startDM(userId, name){
   const dmKey=[CURRENT_USER.id, userId].sort().join('_');
   const initials=(name||'?').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
   let dm=DMS.find(d=>d.id===dmKey);
   if(!dm){
     dm={id:dmKey,name,initials,bg:'#1B3A6B',tc:'#fff',unread:0,userId};
     DMS.push(dm);
-    saveDMList();
+    if(CURRENT_USER.org_id&&CURRENT_USER.org_id!=='demo'){
+      try{
+        await supaFetch('dm_list',{insert:{id:dmKey,user1_id:CURRENT_USER.id,user2_id:userId,org_id:CURRENT_USER.org_id,user2_name:name,user2_initials:initials}});
+      } catch(e){ console.error('Save DM error',e); }
+    }
   }
   renderSidebar();
   openDM(dmKey);
 }
 
-function saveDMList(){
-  try{
-    const key='zerem_dms_'+CURRENT_USER.id;
-    console.log('Saving DMs with key:', key, 'DMS:', DMS);
-    localStorage.setItem(key, JSON.stringify(DMS));
-  } catch(e){ console.error('saveDMList error:', e); }
-}
+function saveDMList(){}
 
-function loadDMList(){
+async function loadDMList(){
+  if(!CURRENT_USER.org_id||CURRENT_USER.org_id==='demo')return;
   try{
-    // Clear old test data first
-    const saved=localStorage.getItem('zerem_dms_'+CURRENT_USER.id);
-    if(saved){
-      const list=JSON.parse(saved);
-      list.forEach(dm=>{
-        if(!DMS.find(d=>d.id===dm.id)){
-          // Fix old format
-          if(!dm.initials)dm.initials=(dm.name||'?').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
-          if(!dm.bg)dm.bg='#1B3A6B';
-          if(!dm.tc)dm.tc='#fff';
-          DMS.push(dm);
-        }
+    const dms=await supaFetch('dm_list',{filters:[{key:'user1_id',value:CURRENT_USER.id}]});
+    if(dms&&dms.length>0){
+      DMS.length=0;
+      dms.forEach(dm=>{
+        DMS.push({id:dm.id,name:dm.user2_name,initials:dm.user2_initials||(dm.user2_name||'?').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2),bg:'#1B3A6B',tc:'#fff',unread:0,userId:dm.user2_id});
       });
+      renderSidebar();
     }
-  } catch(e){}
+  } catch(e){ console.error('Load DMs error',e); }
 }
 
 function renderOrgPage(mc){
@@ -2964,14 +2958,16 @@ function openModal(type){
     <div class="modal-btns"><button class="mbb" onclick="closeModal()">Cancel</button><button class="mbb prim" onclick="createGroup()">Create group</button></div>`;
   }
   else if(type==='newDM'){
-    const DMPEOPLE=Object.entries(ALL_PPL).filter(([k])=>k!=='SC').map(([av,p])=>({av,...p}));
+    const others=ORG_MEMBERS.filter(m=>m.id!==CURRENT_USER.id);
     mb.innerHTML=`<h3>New direct message</h3><p>Start a private conversation with a team member.</p>
     <input id="dm-search" placeholder="🔍  Search by name..." oninput="filterDMPeople(this.value)" style="width:100%;padding:8px 11px;border:1.5px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;color:var(--text);outline:none;margin-bottom:10px;background:var(--bg);"/>
-    <div id="dm-people">${DMPEOPLE.map(p=>`<div onclick="startDM('${p.av}','${p.name}','${p.role}','${p.bg}','${p.tc}')" style="display:flex;align-items:center;gap:10px;padding:9px 10px;cursor:pointer;border-radius:8px;border:1px solid var(--border);margin-bottom:5px;transition:all .15s;" onmouseenter="this.style.borderColor='var(--brand)';this.style.background='var(--bl)'" onmouseleave="this.style.borderColor='var(--border)';this.style.background=''">
-      <div style="width:30px;height:30px;border-radius:50%;background:${p.bg};color:${p.tc};display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0;">${p.av}</div>
-      <div style="flex:1;"><div style="font-size:13px;font-weight:600;color:var(--text);">${p.name}</div><div style="font-size:11px;color:var(--text-3);">${p.role}</div></div>
+    <div id="dm-people">${others.map(m=>{
+      const initials=(m.full_name||'?').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+      return`<div data-uid="${m.id}" data-name="${(m.full_name||'Unknown').replace(/"/g,'&quot;')}" onclick="startDM(this.dataset.uid,this.dataset.name);closeModal();" style="display:flex;align-items:center;gap:10px;padding:9px 10px;cursor:pointer;border-radius:8px;border:1px solid var(--border);margin-bottom:5px;transition:all .15s;" onmouseenter="this.style.borderColor='var(--brand)';this.style.background='var(--bl)'" onmouseleave="this.style.borderColor='var(--border)';this.style.background=''">
+      <div style="width:30px;height:30px;border-radius:50%;background:#1B3A6B;color:#fff;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0;">${initials}</div>
+      <div style="flex:1;"><div style="font-size:13px;font-weight:600;color:var(--text);">${m.full_name||'Unknown'}</div><div style="font-size:11px;color:var(--text-3);">${m.role||'member'}</div></div>
       <span style="font-size:11px;color:var(--brand);font-weight:500;">Message →</span>
-    </div>`).join('')}</div>
+    </div>`;}).join('')}</div>
     <div class="modal-btns" style="margin-top:8px;"><button class="mbb" onclick="closeModal()">Cancel</button></div>`;
   }
 }
@@ -3189,11 +3185,21 @@ function deleteDMConfirm(id){
     </div>`);
 }
 
-function doDeleteDM(id){
+async function doDeleteDM(id){
   const idx=DMS.findIndex(x=>x.id===id);if(idx===-1)return;
   const name=DMS[idx].name;
-  DMS.splice(idx,1);delete MSGS[id];saveDMList();
+  DMS.splice(idx,1);delete MSGS[id];
   closeModal();
+  // Delete from Supabase
+  if(CURRENT_USER.org_id&&CURRENT_USER.org_id!=='demo'){
+    try{
+      const url=`${SUPA_URL}/rest/v1/dm_list?id=eq.${id}`;
+      await fetch(url,{method:'DELETE',headers:{'apikey':SUPA_KEY,'Authorization':`Bearer ${CURRENT_USER.access_token||SUPA_KEY}`}});
+      // Also delete messages
+      const url2=`${SUPA_URL}/rest/v1/messages?channel_id=eq.${id}&org_id=eq.${CURRENT_USER.org_id}`;
+      await fetch(url2,{method:'DELETE',headers:{'apikey':SUPA_KEY,'Authorization':`Bearer ${CURRENT_USER.access_token||SUPA_KEY}`}});
+    } catch(e){ console.error('Delete DM error',e); }
+  }
   if(currentView?.type==='dm'&&currentView.id===id){
     currentView=null;
     document.getElementById('mc').innerHTML=`<div class="welcome"><div class="w-icon">💬</div><div class="w-title">Conversation deleted</div><div class="w-sub">Select another channel from the sidebar.</div></div>`;
@@ -3243,24 +3249,49 @@ function createGroup(){
   if(!name){showToast('Group name required');return;}
   const checked=Array.from(document.querySelectorAll('#member-picks input:checked')).map(c=>c.value);
   const id='g-'+Date.now();
-  GROUPS.push({id,name,emoji,color:selColor+'22',tc:selColor,members:[CURRENT_USER.id,...checked],desc,unread:0});
+  const newGroup={id,name,emoji,color:selColor+'22',tc:selColor,members:[CURRENT_USER.id,...checked],desc,unread:0};
+  GROUPS.push(newGroup);
   if(!MSGS[id])MSGS[id]=[];
-  saveGroupList();
+  // Save to Supabase
+  if(CURRENT_USER.org_id&&CURRENT_USER.org_id!=='demo'){
+    supaFetch('groups',{insert:{id,org_id:CURRENT_USER.org_id,name,emoji,color:selColor+'22',tc:selColor,description:desc,created_by:CURRENT_USER.id}}).then(()=>{
+      // Add members
+      const allMembers=[CURRENT_USER.id,...checked];
+      allMembers.forEach(uid=>{
+        supaFetch('group_members',{insert:{group_id:id,user_id:uid,org_id:CURRENT_USER.org_id}}).catch(e=>console.error(e));
+      });
+    }).catch(e=>console.error(e));
+  }
   closeModal();renderSidebar();openGroup(id);showToast(`${emoji} #${name} created`);
 }
 
-function saveGroupList(){
-  try{ localStorage.setItem('zerem_groups_'+CURRENT_USER.id, JSON.stringify(GROUPS)); } catch(e){}
-}
+function saveGroupList(){} // deprecated - now using Supabase
 
-function loadGroupList(){
+async function loadGroupList(){
+  if(!CURRENT_USER.org_id||CURRENT_USER.org_id==='demo')return;
   try{
-    const saved=localStorage.getItem('zerem_groups_'+CURRENT_USER.id);
-    if(saved){
-      const list=JSON.parse(saved);
-      list.forEach(g=>{if(!GROUPS.find(x=>x.id===g.id))GROUPS.push(g);});
+    const [groups, members] = await Promise.all([
+      supaFetch('groups',{filters:[{key:'org_id',value:CURRENT_USER.org_id}]}),
+      supaFetch('group_members',{filters:[{key:'org_id',value:CURRENT_USER.org_id}]})
+    ]);
+    if(groups&&groups.length>0){
+      GROUPS.length=0;
+      groups.forEach(g=>{
+        const groupMembers=members?members.filter(m=>m.group_id===g.id).map(m=>m.user_id):[];
+        GROUPS.push({
+          id:g.id,
+          name:g.name,
+          emoji:g.emoji||'💬',
+          color:g.color||'#1B3A6B22',
+          tc:g.tc||'#1B3A6B',
+          desc:g.description||'',
+          members:groupMembers,
+          unread:0,
+        });
+      });
+      renderSidebar();
     }
-  } catch(e){}
+  } catch(e){ console.error('Load groups error',e); }
 }
 
 function pickColor(c,el){selColor=c;document.querySelectorAll('.cs').forEach(s=>s.classList.remove('sel'));el.classList.add('sel');}
