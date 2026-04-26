@@ -3376,6 +3376,7 @@ async function loadGroupList(){
           desc:g.description||'',
           members:groupMembers,
           unread:0,
+          created_by:g.created_by,
         });
       });
       renderSidebar();
