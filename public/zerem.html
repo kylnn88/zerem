@@ -2498,9 +2498,10 @@ function renderT3(mc,sd){
   <div class="tblw"><table class="bt"><thead><tr><th>Style</th><th>Buyer</th><th class="cc">Colours</th><th class="qc">Order qty</th><th>Enter ${sd.recordLabel} today</th><th>${dep?.name} done</th><th>My total</th><th>Remaining</th>${isMon?'<th class="mth">📋 Monitor</th>':''}</tr></thead><tbody>`;
   WEEKS.forEach((wl,wi)=>{const ws=mS.filter(s=>s.week===wi);if(!ws.length)return;
     html+=`<tr class="wgh"><td colspan="${isMon?9:8}">📅 ${wl}</td></tr>`;
-    ws.forEach(s=>{const si=STYLES.indexOf(s);const oQ=tQty(s);const depDone=gDepDone(sd,s);const log=s[gLog(sd)]||[];const myT=gTotal(log);const canE=Math.max(0,depDone-myT);const rem=Math.max(0,oQ-myT);const pct=oQ>0?Math.min(100,Math.round(myT/oQ*100)):0;const cH=s.colours.map(cv=>`<div style="font-size:12px;margin-bottom:1px;">${cv.name} — <strong>${cv.qty.toLocaleString()}</strong> pcs</div>`).join('');const mon=s.monitor;const isM=mon&&mon.subId===sd.id;
+    ws.forEach(s=>{const si=STYLES.indexOf(s);const oQ=tQty(s);const depDone=gDepDone(sd,s);const log=s[gLog(sd)]||[];const myT=gTotal(log);const isAssigned=CURRENT_USER.role==='admin'||!sd.assignedMembers||sd.assignedMembers.length===0||(sd.assignedMembers&&sd.assignedMembers.includes(CURRENT_USER.id));
+const canE=isAssigned?Math.max(0,depDone-myT):0;const rem=Math.max(0,oQ-myT);const pct=oQ>0?Math.min(100,Math.round(myT/oQ*100)):0;const cH=s.colours.map(cv=>`<div style="font-size:12px;margin-bottom:1px;">${cv.name} — <strong>${cv.qty.toLocaleString()}</strong> pcs</div>`).join('');const mon=s.monitor;const isM=mon&&mon.subId===sd.id;
       html+=`<tr><td><span class="sc">${s.code}</span></td><td>${s.buyer}</td><td class="cc">${cH}</td><td class="qc" style="font-weight:600;color:var(--brand);">${oQ.toLocaleString()}</td>
-        <td><div class="qcell"><div class="qline"><input class="qi${canE<=0?' warn':''}" id="q-${sd.id}-${si}" type="number" min="0" max="${canE}" placeholder="${canE>0?'0':'-'}" ${canE<=0?'disabled':''} onkeydown="if(event.key==='Enter')saveQ('${sd.id}',${si})" oninput="valQ(this,${canE})"/><button class="sq" ${canE<=0?'disabled':''} onclick="saveQ('${sd.id}',${si})">Save</button></div>${canE>0?`<div class="qa">Max ${canE.toLocaleString()} pcs</div>`:myT>=oQ?`<div class="qa">✓ Complete</div>`:`<div class="ql">Waiting for ${dep?.name}</div>`}</div></td>
+        <td><div class="qcell"><div class="qline"><input class="qi${canE<=0?' warn':''}" id="q-${sd.id}-${si}" type="number" min="0" max="${canE}" placeholder="${canE>0?'0':'-'}" ${canE<=0||!isAssigned?'disabled':''} onkeydown="if(event.key==='Enter')saveQ('${sd.id}',${si})" oninput="valQ(this,${canE})"/><button class="sq" ${canE<=0||!isAssigned?'disabled':''} onclick="saveQ('${sd.id}',${si})">Save</button></div>${!isAssigned?`<div class="ql">Not assigned to this dept</div>`:canE>0?`<div class="qa">Max ${canE.toLocaleString()} pcs</div>`:myT>=oQ?`<div class="qa">✓ Complete</div>`:`<div class="ql">Waiting for ${dep?.name}</div>`}</div></td>
         <td><div style="font-weight:500;color:${depDone>0?'var(--brand)':'var(--text-3)'};">${depDone.toLocaleString()}</div><div style="font-size:10px;color:var(--text-3);">of ${oQ.toLocaleString()}</div></td>
         <td><div style="font-weight:500;color:${myT>0?'var(--brand)':'var(--text-3)'};">${myT.toLocaleString()}</div><div style="font-size:10px;color:var(--text-3);">${pct}%</div><div class="pb"><div class="pf" style="width:${pct}%;"></div></div></td>
         <td><span style="font-weight:500;color:${rem===0?'var(--brand)':'var(--amber)'};">${rem===0?'✓ Done':rem.toLocaleString()+' pcs'}</span></td>
@@ -2848,7 +2849,7 @@ function renderMembers(mc,sd){
   // Get assigned members for this sub-dept
   const assignedIds=sd.assignedMembers||[];
   // Admin always shown, plus assigned members
-  const adminMember={id:CURRENT_USER.id,full_name:CURRENT_USER.full_name,role:'Admin (you)',initials:CURRENT_USER.initials};
+  const adminMember={id:CURRENT_USER.id,full_name:CURRENT_USER.full_name,role:(CURRENT_USER.role!=='admin')?'Member (you)':'Admin (you)',initials:CURRENT_USER.initials};
   const assignedMembers=ORG_MEMBERS.filter(m=>m.id!==CURRENT_USER.id&&assignedIds.includes(m.id));
   const allShown=[adminMember,...assignedMembers];
 
