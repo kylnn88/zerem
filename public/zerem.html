@@ -563,6 +563,7 @@ async function loadDepartments() {
     renderSidebar();
     loadStyles();
     loadOrgMembers();
+    loadDMList();
     // Load sub-department member assignments
     const subMembers=await supaFetch('sub_department_members',{
       filters:[{key:'org_id',value:CURRENT_USER.org_id}]
@@ -865,7 +866,12 @@ function openOrgPage(tab='departments'){
 
 function renderContactsPage(mc){
   mc.style.overflowY='auto';
-  const members=ORG_MEMBERS.length>0?ORG_MEMBERS:[{id:CURRENT_USER.id,full_name:CURRENT_USER.full_name,role:CURRENT_USER.role}];
+  if(ORG_MEMBERS.length===0){
+    loadOrgMembers().then(()=>renderContactsPage(mc));
+    mc.innerHTML='<div style="padding:20px;color:var(--text-3);font-size:13px;">Loading contacts...</div>';
+    return;
+  }
+  const members=ORG_MEMBERS;
   mc.innerHTML=`<div style="width:100%;max-width:700px;padding:20px 18px;box-sizing:border-box;">
     <div style="font-size:13px;color:var(--text-3);margin-bottom:14px;">${members.length} member${members.length!==1?'s':''} in ${CURRENT_USER.org_name}</div>
     <div style="display:flex;flex-direction:column;gap:8px;">
@@ -879,7 +885,7 @@ function renderContactsPage(mc){
             <div style="font-size:14px;font-weight:600;color:var(--text);">${m.full_name||'Unknown'}${isMe?' (you)':''}</div>
             <div style="font-size:12px;color:var(--text-3);margin-top:2px;">${m.role||'member'}${depts.length>0?' · '+depts.map(d=>d.name).join(', '):''}</div>
           </div>
-          ${!isMe?`<button onclick="startDM('${m.id}','${m.full_name||'Unknown'}')" style="padding:6px 14px;background:var(--brand);color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;">Message</button>`:''}
+          ${!isMe?`<button data-uid="${m.id}" data-name="${(m.full_name||'Unknown').replace(/"/g,'&quot;')}" onclick="startDM(this.dataset.uid,this.dataset.name)" style="padding:6px 14px;background:var(--brand);color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;">Message</button>`:''}
         </div>`;
       }).join('')}
     </div>
@@ -889,14 +895,41 @@ function renderContactsPage(mc){
 function startDM(userId, name){
   const dmKey=[CURRENT_USER.id, userId].sort().join('_');
   const initials=(name||'?').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
-  // Check if DM already exists in list
   let dm=DMS.find(d=>d.id===dmKey);
   if(!dm){
     dm={id:dmKey,name,initials,bg:'#1B3A6B',tc:'#fff',unread:0,userId};
     DMS.push(dm);
+    saveDMList();
   }
   renderSidebar();
   openDM(dmKey);
+}
+
+function saveDMList(){
+  try{
+    const key='zerem_dms_'+CURRENT_USER.id;
+    console.log('Saving DMs with key:', key, 'DMS:', DMS);
+    localStorage.setItem(key, JSON.stringify(DMS));
+  } catch(e){ console.error('saveDMList error:', e); }
+}
+
+function loadDMList(){
+  try{
+    // Clear old test data first
+    const saved=localStorage.getItem('zerem_dms_'+CURRENT_USER.id);
+    if(saved){
+      const list=JSON.parse(saved);
+      list.forEach(dm=>{
+        if(!DMS.find(d=>d.id===dm.id)){
+          // Fix old format
+          if(!dm.initials)dm.initials=(dm.name||'?').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+          if(!dm.bg)dm.bg='#1B3A6B';
+          if(!dm.tc)dm.tc='#fff';
+          DMS.push(dm);
+        }
+      });
+    }
+  } catch(e){}
 }
 
 function renderOrgPage(mc){
@@ -3045,18 +3078,7 @@ function filterDMPeople(v){
   ppl.forEach(el=>{const name=el.querySelector('div > div:first-child').textContent.toLowerCase();el.style.display=name.includes(v.toLowerCase())?'':'none';});
 }
 
-function startDM(av,name,role,bg,tc){
-  closeModal();
-  // Check if DM already exists
-  const existing=DMS.find(d=>d.av===av&&!d.id.includes('_'));
-  if(existing){openDM(existing.id);return;}
-  const id='dm-'+av.toLowerCase();
-  if(!DMS.find(d=>d.id===id)){
-    DMS.push({id,name,av,bg,tc,role,online:false,unread:0});
-    if(!MSGS[id])MSGS[id]=[];
-  }
-  renderSidebar();openDM(id);
-}
+
 
 function showTH(v){const h=document.getElementById('type-help');if(!h)return;const m={'1':'Enters styles with dates, colours, and monitoring targets.','2':'Sets work/prep status per style. Unlocks T3 depts.','3':'Daily qty input with monthly calendar grid log.'};h.textContent=m[v]||'';}
 
