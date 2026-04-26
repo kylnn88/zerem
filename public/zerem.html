@@ -1935,13 +1935,33 @@ function renderDMsList(){
   const list=document.getElementById('dms-list');list.innerHTML='';
   DMS.forEach(dm=>{
     const isActive=currentView?.type==='dm'&&currentView.id===dm.id;
-    const div=document.createElement('div');div.className='sbi'+(isActive?' active':'');div.onclick=()=>openDM(dm.id);
+    const div=document.createElement('div');
+    div.className='sbi'+(isActive?' active':'');
+    div.style.cssText='position:relative;';
+    div.onclick=()=>openDM(dm.id);
     const initials=dm.initials||(dm.name||'?').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
     div.innerHTML=`<div class="sbi-av" style="background:#1B3A6B;color:#fff;">${initials}</div>
       <span class="sbi-lbl">${dm.name}</span>
-      ${dm.unread>0?`<span class="sbi-badge">${dm.unread}</span>`:''}`;
+      ${dm.unread>0?`<span class="sbi-badge">${dm.unread}</span>`:''}
+      <button onclick="event.stopPropagation();deleteDM('${dm.id}')" style="opacity:0;position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text-3);font-size:14px;padding:2px 5px;border-radius:4px;transition:opacity .15s;" class="dm-del-btn">✕</button>`;
+    div.onmouseenter=()=>{const b=div.querySelector('.dm-del-btn');if(b)b.style.opacity='1';};
+    div.onmouseleave=()=>{const b=div.querySelector('.dm-del-btn');if(b)b.style.opacity='0';};
     list.appendChild(div);
   });
+}
+
+function deleteDM(id){
+  if(!confirm('Delete this conversation?'))return;
+  DMS=DMS.filter(d=>d.id!==id);
+  saveDMList();
+  if(currentView?.type==='dm'&&currentView.id===id){
+    currentView=null;
+    document.getElementById('mc').innerHTML=`<div class="welcome"><div class="welcome-icon">💬</div><div class="welcome-title">Welcome to Zerem</div><div class="welcome-sub">Select a department, group, or direct message from the sidebar to get started.</div></div>`;
+    document.getElementById('tb-right').innerHTML='';
+    document.getElementById('tabbar').classList.add('hidden');
+  }
+  renderSidebar();
+  showToast('Conversation deleted');
 }
 
 function toggleOps(e){
@@ -3254,6 +3274,7 @@ function doDeleteGroup(id){
 }
 
 // ── EDIT / DELETE: DIRECT MESSAGES ──
+function deleteDM(id){ deleteDMConfirm(id); }
 function editDMModal(id){
   const dm=DMS.find(x=>x.id===id);if(!dm)return;
   showModalHTML(`<h3 style="margin-bottom:4px;">Conversation with ${dm.name}</h3>
@@ -3288,7 +3309,7 @@ function deleteDMConfirm(id){
 function doDeleteDM(id){
   const idx=DMS.findIndex(x=>x.id===id);if(idx===-1)return;
   const name=DMS[idx].name;
-  DMS.splice(idx,1);delete MSGS[id];
+  DMS.splice(idx,1);delete MSGS[id];saveDMList();
   closeModal();
   if(currentView?.type==='dm'&&currentView.id===id){
     currentView=null;
