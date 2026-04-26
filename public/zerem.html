@@ -1814,13 +1814,34 @@ function renderGroupsList(){
 
 function deleteGroupConfirm(id){
   const g=GROUPS.find(x=>x.id===id);if(!g)return;
-  showModalHTML(`<h3 style="margin-bottom:8px;">Delete ${g.emoji} ${g.name}?</h3>
-    <p style="font-size:13px;color:var(--text-2);margin-bottom:6px;line-height:1.55;">All messages in this group will be permanently removed.</p>
-    <p style="font-size:12px;color:var(--error);margin-bottom:16px;">This action cannot be undone.</p>
-    <div class="modal-btns">
+  const isCreator=g.created_by===CURRENT_USER.id||CURRENT_USER.role==='admin';
+  showModalHTML(`<h3 style="margin-bottom:8px;">${g.emoji} ${g.name}</h3>
+    <p style="font-size:13px;color:var(--text-2);margin-bottom:16px;line-height:1.55;">What would you like to do?</p>
+    <div class="modal-btns" style="flex-direction:column;gap:8px;">
+      <button class="mbb" style="background:var(--error);color:#fff;border-color:var(--error);" onclick="leaveGroup('${id}')">Leave group</button>
+      ${isCreator?`<button class="mbb" style="color:var(--error);border-color:var(--error);" onclick="doDeleteGroup('${id}')">Delete group for everyone</button>`:''}
       <button class="mbb" onclick="closeModal()">Cancel</button>
-      <button class="mbb" style="background:var(--error);color:#fff;border-color:var(--error);" onclick="doDeleteGroup('${id}')">Yes, delete</button>
     </div>`);
+}
+
+async function leaveGroup(id){
+  const g=GROUPS.find(x=>x.id===id);if(!g)return;
+  const name=g.name;
+  GROUPS.splice(GROUPS.findIndex(x=>x.id===id),1);
+  closeModal();
+  // Remove self from group_members in Supabase
+  if(CURRENT_USER.org_id&&CURRENT_USER.org_id!=='demo'){
+    try{
+      const url=`${SUPA_URL}/rest/v1/group_members?group_id=eq.${id}&user_id=eq.${CURRENT_USER.id}`;
+      await fetch(url,{method:'DELETE',headers:{'apikey':SUPA_KEY,'Authorization':`Bearer ${CURRENT_USER.access_token||SUPA_KEY}`}});
+    } catch(e){ console.error('Leave group error',e); }
+  }
+  if(currentView?.type==='group'&&currentView.id===id){
+    currentView=null;
+    document.getElementById('mc').innerHTML=`<div class="welcome"><div class="w-icon">💬</div><div class="w-title">You left ${name}</div><div class="w-sub">Select another channel from the sidebar.</div></div>`;
+    document.getElementById('tb-right').innerHTML='';
+  }
+  renderSidebar();showToast('You left '+name);
 }
 
 function renderDMsList(){
@@ -3194,16 +3215,7 @@ function doSaveGroup(id){
   showToast(name+' updated');
 }
 
-function deleteGroupConfirm(id){
-  const g=GROUPS.find(x=>x.id===id);if(!g)return;
-  showModalHTML(`<h3 style="margin-bottom:8px;">Delete "${g.name}"?</h3>
-    <p style="font-size:13px;color:var(--text-2);margin-bottom:6px;line-height:1.55;">All messages in this group will be permanently removed.</p>
-    <p style="font-size:12px;color:var(--error);margin-bottom:16px;">This action cannot be undone.</p>
-    <div class="modal-btns">
-      <button class="mbb" onclick="editGroupModal('${id}')">Back</button>
-      <button class="mbb" style="background:var(--error);color:#fff;border-color:var(--error);" onclick="doDeleteGroup('${id}')">Yes, delete</button>
-    </div>`);
-}
+
 
 async function doDeleteGroup(id){
   const idx=GROUPS.findIndex(x=>x.id===id);if(idx===-1)return;
@@ -3352,7 +3364,8 @@ async function loadGroupList(){
     ]);
     if(groups&&groups.length>0){
       GROUPS.length=0;
-      groups.forEach(g=>{
+      const myGroupIds=members?members.filter(m=>m.user_id===CURRENT_USER.id).map(m=>m.group_id):[];
+      groups.filter(g=>myGroupIds.includes(g.id)).forEach(g=>{
         const groupMembers=members?members.filter(m=>m.group_id===g.id).map(m=>m.user_id):[];
         GROUPS.push({
           id:g.id,
