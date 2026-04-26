@@ -1798,12 +1798,29 @@ function renderGroupsList(){
   const list=document.getElementById('groups-list');list.innerHTML='';
   GROUPS.forEach(g=>{
     const isActive=currentView?.type==='group'&&currentView.id===g.id;
-    const div=document.createElement('div');div.className='sbi'+(isActive?' active':'');div.onclick=()=>openGroup(g.id);
+    const div=document.createElement('div');
+    div.className='sbi'+(isActive?' active':'');
+    div.style.cssText='position:relative;';
+    div.onclick=()=>openGroup(g.id);
     div.innerHTML=`<div class="sbi-icon" style="background:${g.color};color:${g.tc};">${g.emoji}</div>
       <span class="sbi-lbl">${g.name}</span>
-      ${g.unread>0?`<span class="sbi-badge">${g.unread}</span>`:''}`;
+      ${g.unread>0?`<span class="sbi-badge">${g.unread}</span>`:''}
+      <button onclick="event.stopPropagation();deleteGroupConfirm('${g.id}')" style="opacity:0;position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text-3);font-size:14px;padding:2px 5px;border-radius:4px;transition:opacity .15s;" class="grp-del-btn">✕</button>`;
+    div.onmouseenter=()=>{const b=div.querySelector('.grp-del-btn');if(b)b.style.opacity='1';};
+    div.onmouseleave=()=>{const b=div.querySelector('.grp-del-btn');if(b)b.style.opacity='0';};
     list.appendChild(div);
   });
+}
+
+function deleteGroupConfirm(id){
+  const g=GROUPS.find(x=>x.id===id);if(!g)return;
+  showModalHTML(`<h3 style="margin-bottom:8px;">Delete ${g.emoji} ${g.name}?</h3>
+    <p style="font-size:13px;color:var(--text-2);margin-bottom:6px;line-height:1.55;">All messages in this group will be permanently removed.</p>
+    <p style="font-size:12px;color:var(--error);margin-bottom:16px;">This action cannot be undone.</p>
+    <div class="modal-btns">
+      <button class="mbb" onclick="closeModal()">Cancel</button>
+      <button class="mbb" style="background:var(--error);color:#fff;border-color:var(--error);" onclick="doDeleteGroup('${id}')">Yes, delete</button>
+    </div>`);
 }
 
 function renderDMsList(){
@@ -2043,7 +2060,7 @@ function renderContent(){
 }
 
 // ── CHAT ONLY (groups, DMs, depts) ──
-function renderChatOnly(msgKey){
+async function renderChatOnly(msgKey){
   const mc=document.getElementById('mc');
   mc.style.overflowY='hidden';
   mc.style.background='var(--surface)';
@@ -2072,7 +2089,56 @@ function renderChatOnly(msgKey){
       </div>
     </div>
   </div>`;
-  setTimeout(()=>{const a=document.getElementById('msgs-area');if(a)a.scrollTop=a.scrollHeight;},40);
+  // Load messages from Supabase
+  if(CURRENT_USER.org_id&&CURRENT_USER.org_id!=='demo'){
+    try{
+      const msgs=await supaFetch('messages',{
+        select:'*&order=created_at.asc',
+        filters:[{key:'org_id',value:CURRENT_USER.org_id},{key:'channel_id',value:msgKey}]
+      });
+      const area=document.getElementById('msgs-area');
+      if(area&&msgs&&msgs.length>0){
+        msgs.forEach(msg=>{
+          const isMe=msg.user_id===CURRENT_USER.id;
+          const m={
+            av:isMe?CURRENT_USER.initials:(msg.sender_initials||'?'),
+            bg:isMe?'#2456A4':'#6B7280',tc:'#fff',
+            name:isMe?CURRENT_USER.full_name:(msg.sender_name||'Team member'),
+            text:msg.content,
+            time:new Date(msg.created_at).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}),
+            mine:isMe
+          };
+          MSGS[msgKey].push(m);
+          const div=document.createElement('div');
+          div.innerHTML=buildMsg(m,msg.id);
+          area.appendChild(div.firstElementChild||div);
+        });
+        area.scrollTop=area.scrollHeight;
+      }
+    } catch(e){ console.error('Load chat messages error',e); }
+  } else {
+    // Load messages from Supabase
+  if(CURRENT_USER.org_id&&CURRENT_USER.org_id!=='demo'){
+    try{
+      const msgs=await supaFetch('messages',{
+        select:'*&order=created_at.asc',
+        filters:[{key:'org_id',value:CURRENT_USER.org_id},{key:'channel_id',value:msgKey}]
+      });
+      const area=document.getElementById('msgs-area');
+      if(area&&msgs&&msgs.length>0){
+        msgs.forEach(msg=>{
+          const isMe=msg.user_id===CURRENT_USER.id;
+          const m={av:isMe?CURRENT_USER.initials:(msg.sender_initials||'?'),bg:isMe?'#2456A4':'#6B7280',tc:'#fff',name:isMe?CURRENT_USER.full_name:(msg.sender_name||'Team member'),text:msg.content,time:new Date(msg.created_at).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}),mine:isMe};
+          MSGS[msgKey].push(m);
+          const div=document.createElement('div');
+          div.innerHTML=buildMsg(m,msg.id);
+          area.appendChild(div.firstElementChild||div);
+        });
+        area.scrollTop=area.scrollHeight;
+      }
+    } catch(e){ console.error('Load chat messages error',e); }
+  }
+  }
 }
 
 async function renderMessages(mc,msgKey,channelName){
@@ -3139,11 +3205,21 @@ function deleteGroupConfirm(id){
     </div>`);
 }
 
-function doDeleteGroup(id){
+async function doDeleteGroup(id){
   const idx=GROUPS.findIndex(x=>x.id===id);if(idx===-1)return;
   const name=GROUPS[idx].name;
   GROUPS.splice(idx,1);delete MSGS[id];
   closeModal();
+  // Delete from Supabase
+  if(CURRENT_USER.org_id&&CURRENT_USER.org_id!=='demo'){
+    try{
+      const url=`${SUPA_URL}/rest/v1/groups?id=eq.${id}`;
+      await fetch(url,{method:'DELETE',headers:{'apikey':SUPA_KEY,'Authorization':`Bearer ${CURRENT_USER.access_token||SUPA_KEY}`}});
+      // Delete messages
+      const url2=`${SUPA_URL}/rest/v1/messages?channel_id=eq.${id}&org_id=eq.${CURRENT_USER.org_id}`;
+      await fetch(url2,{method:'DELETE',headers:{'apikey':SUPA_KEY,'Authorization':`Bearer ${CURRENT_USER.access_token||SUPA_KEY}`}});
+    } catch(e){ console.error('Delete group error',e); }
+  }
   if(currentView?.type==='group'&&currentView.id===id){
     currentView=null;
     document.getElementById('mc').innerHTML=`<div class="welcome"><div class="w-icon">💬</div><div class="w-title">Group deleted</div><div class="w-sub">Select another channel from the sidebar.</div></div>`;
