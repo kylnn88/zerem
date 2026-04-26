@@ -880,7 +880,7 @@ function buildDeptCard(d){
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--text-3)" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
               </div>
             </div>
-            <span style="font-size:11px;color:var(--text-3);">${d.members.length+1} member${d.members.length!==0?'s':''} (incl. admin)</span>
+            <span style="font-size:11px;color:var(--text-3);">${d.members.length} member${d.members.length!==1?'s':''}</span>
           </div>
           <div style="display:flex;gap:6px;">
             <button class="tbb" style="font-size:12px;padding:5px 12px;" onclick="openDept('${d.id}')">Open channel</button>
