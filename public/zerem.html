@@ -564,6 +564,7 @@ async function loadDepartments() {
     loadStyles();
     loadOrgMembers();
     loadDMList();
+    loadGroupList();
     // Load sub-department member assignments
     const subMembers=await supaFetch('sub_department_members',{
       filters:[{key:'org_id',value:CURRENT_USER.org_id}]
@@ -2059,7 +2060,7 @@ function renderChatOnly(msgKey){
   else{placeholderName=msgKey.charAt(0).toUpperCase()+msgKey.slice(1);}
   mc.innerHTML=`<div class="chat-area">
     <div class="chat-msgs" id="msgs-area">
-      <div class="date-sep"><div class="date-line"></div><span class="date-lbl">Today · Jul 3, 2025</span><div class="date-line"></div></div>
+      <div class="date-sep"><div class="date-line"></div><span class="date-lbl">Today · ${new Date().toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'})}</span><div class="date-line"></div></div>
       ${MSGS[msgKey].map(m=>buildMsg(m)).join('')}
     </div>
     <div class="composer">
@@ -2944,7 +2945,7 @@ function openModal(type){
   }
   else if(type==='newGroup'){
     const sw=COLORS.map(c=>`<div class="cs${selColor===c?' sel':''}" style="background:${c}" onclick="pickColor('${c}',this)"></div>`).join('');
-    const PLIST=[{av:'JO',name:'James Obi',role:'Operations Head',bg:'#FAECE7',tc:'#712B13'},{av:'AK',name:'Ama Kofi',role:'Sewing Lead',bg:'#E6F1FB',tc:'#0C447C'},{av:'RK',name:'Raj Kumar',role:'QC Head',bg:'#FAEEDA',tc:'#633806'},{av:'LB',name:'Lena Boateng',role:'Packing Lead',bg:'#EAF3DE',tc:'#27500A'},{av:'MB',name:'Mia Brown',role:'Accounts',bg:'#FAE8F5',tc:'#7B1A6A'},{av:'KS',name:'Kwame Sarfo',role:'HR',bg:'#E8F0FA',tc:'#1A4B7B'}];
+    const others=ORG_MEMBERS.filter(m=>m.id!==CURRENT_USER.id);
     mb.innerHTML=`<h3>Create group</h3><p>Groups are shared channels open to multiple team members.</p>
     <label>Group name *</label><input id="gn-name" placeholder="e.g. Export team"/>
     <label>Description</label><textarea id="gn-desc" placeholder="What is this group for?"></textarea>
@@ -2952,11 +2953,13 @@ function openModal(type){
     <label>Colour</label><div class="cs-row">${sw}</div>
     <label>Add members</label>
     <div id="member-picks" style="display:flex;flex-direction:column;gap:5px;margin-bottom:12px;">
-      ${PLIST.map(p=>`<label style="display:flex;align-items:center;gap:9px;cursor:pointer;padding:7px 10px;border:1px solid var(--border);border-radius:8px;margin:0;">
-        <input type="checkbox" value="${p.av}" style="width:auto;margin:0;cursor:pointer;"/>
-        <div style="width:24px;height:24px;border-radius:50%;background:${p.bg};color:${p.tc};display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;flex-shrink:0;">${p.av}</div>
-        <div style="flex:1;"><div style="font-size:13px;font-weight:500;color:var(--text);">${p.name}</div><div style="font-size:11px;color:var(--text-3);">${p.role}</div></div>
-      </label>`).join('')}
+      ${others.map(m=>{
+        const initials=(m.full_name||'?').split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+        return`<label style="display:flex;align-items:center;gap:9px;cursor:pointer;padding:7px 10px;border:1px solid var(--border);border-radius:8px;margin:0;">
+        <input type="checkbox" value="${m.id}" style="width:auto;margin:0;cursor:pointer;"/>
+        <div style="width:24px;height:24px;border-radius:50%;background:#1B3A6B;color:#fff;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;flex-shrink:0;">${initials}</div>
+        <div style="flex:1;"><div style="font-size:13px;font-weight:500;color:var(--text);">${m.full_name||'Unknown'}</div><div style="font-size:11px;color:var(--text-3);">${m.role||'member'}</div></div>
+      </label>`;}).join('')}
     </div>
     <div class="modal-btns"><button class="mbb" onclick="closeModal()">Cancel</button><button class="mbb prim" onclick="createGroup()">Create group</button></div>`;
   }
@@ -3234,14 +3237,30 @@ async function addSubdept(){
 }
 
 function createGroup(){
-  const name=document.getElementById('gn-name')?.value.trim();const desc=document.getElementById('gn-desc')?.value.trim()||'';const emoji=document.getElementById('gn-emoji')?.value.trim()||'💬';
+  const name=document.getElementById('gn-name')?.value.trim();
+  const desc=document.getElementById('gn-desc')?.value.trim()||'';
+  const emoji=document.getElementById('gn-emoji')?.value.trim()||'💬';
   if(!name){showToast('Group name required');return;}
-  // get selected member checkboxes
   const checked=Array.from(document.querySelectorAll('#member-picks input:checked')).map(c=>c.value);
   const id='g-'+Date.now();
-  GROUPS.push({id,name,emoji,color:selColor+'22',tc:selColor,members:['SC',...checked],desc,unread:0});
+  GROUPS.push({id,name,emoji,color:selColor+'22',tc:selColor,members:[CURRENT_USER.id,...checked],desc,unread:0});
   if(!MSGS[id])MSGS[id]=[];
+  saveGroupList();
   closeModal();renderSidebar();openGroup(id);showToast(`${emoji} #${name} created`);
+}
+
+function saveGroupList(){
+  try{ localStorage.setItem('zerem_groups_'+CURRENT_USER.id, JSON.stringify(GROUPS)); } catch(e){}
+}
+
+function loadGroupList(){
+  try{
+    const saved=localStorage.getItem('zerem_groups_'+CURRENT_USER.id);
+    if(saved){
+      const list=JSON.parse(saved);
+      list.forEach(g=>{if(!GROUPS.find(x=>x.id===g.id))GROUPS.push(g);});
+    }
+  } catch(e){}
 }
 
 function pickColor(c,el){selColor=c;document.querySelectorAll('.cs').forEach(s=>s.classList.remove('sel'));el.classList.add('sel');}
