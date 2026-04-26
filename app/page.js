@@ -17,8 +17,8 @@ export default function Home() {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
-      if (session) checkProfile(session.user);
-      else { setProfile(null); setLoading(false); }
+      if (session && _event === 'SIGNED_IN') checkProfile(session.user);
+      else if (!session) { setProfile(null); setLoading(false); }
     });
 
     return () => subscription.unsubscribe();
